@@ -1,10 +1,12 @@
 CC=g++
 CFLAGS=-w -pthread
+ENDFLAGS=-lcurl
 
-default: test
+default: shelter
 
-test: test.cpp
-	$(CC) $(CFLAGS) test.cpp -o test.o
+shelter: src/shelter.cpp
+	$(CC) $(CFLAGS) src/shelter.cpp src/rpcconnection.cpp -o src/shelter.o $(ENDFLAGS)
 
 clean:
 	$(RM) *.o
+	$(RM) src/*.o
