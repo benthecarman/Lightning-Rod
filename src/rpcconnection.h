@@ -12,6 +12,7 @@ class RPCConnection {
         void setUserPwd(std::string);
         std::string getUserPwd();
         std::string execute(std::string, std::string);
+        std::string execute(std::string);
         std::string execute();
 };
 

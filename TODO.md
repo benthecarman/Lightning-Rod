@@ -2,11 +2,11 @@
 
 ===
 
-- Working RPC calls
-
 - Timeout
 
 - Config: address, port, rpcauth, max connections
+
+- Authentication
 
 - Permissions: RPC Calls, IP addresses
 

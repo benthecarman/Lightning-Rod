@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <curl/curl.h>
+
 #include <string>
 #include <string.h>
 
@@ -46,8 +47,15 @@ size_t CurlWrite_CallbackFunc_StdString(void *contents, size_t size, size_t nmem
     return newLength;
 }
 
-std::string RPCConnection::execute(std::string method, std::string params)
+std::string RPCConnection::execute(std::string data)
 {
+    CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
+    if (res != 0)
+    {
+        printf("Failed global init ...\n");
+        exit(1);
+    }
+
     CURL *curl = curl_easy_init();
     struct curl_slist *headers = NULL;
 
@@ -55,8 +63,6 @@ std::string RPCConnection::execute(std::string method, std::string params)
 
     if (curl)
     {
-        std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\",\"method\": \"" + method + "\", \"params\": " + params + " }";
-
         headers = curl_slist_append(headers, "content-type: text/plain;");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
@@ -71,9 +77,13 @@ std::string RPCConnection::execute(std::string method, std::string params)
         curl_easy_setopt(curl, CURLOPT_USERPWD, this->userpwd.c_str());
 
         curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
 
         curl_easy_perform(curl);
     }
+
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
 
     return s;
 }
@@ -81,32 +91,6 @@ std::string RPCConnection::execute(std::string method, std::string params)
 // Used for testing 
 std::string RPCConnection::execute()
 {
-    CURL *curl = curl_easy_init();
-    struct curl_slist *headers = NULL;
-
-    std::string s;
-
-    if (curl)
-    {
-        std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\",\"method\": \"getbestblockhash\", \"params\": [] }";
-
-        headers = curl_slist_append(headers, "content-type: text/plain;");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-        curl_easy_setopt(curl, CURLOPT_URL, this->url.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)data.length());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-
-        curl_easy_setopt(curl, CURLOPT_USERPWD, this->userpwd.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY);
-
-        curl_easy_perform(curl);
-    }
-
-    return s;
+    std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\",\"method\": \"getblockcount\", \"params\": [] }";
+    return execute(data);
 }
