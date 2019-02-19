@@ -1,15 +1,17 @@
 # Todo
 
-===
+* Config:
+  * Address
+  * Port
+  * RPCAuth
+  * Max Connections
 
-- Timeout
+* Authentication
 
-- Config: address, port, rpcauth, max connections
+* Permissions:
+  * RPC Calls
+  * IP addresses
 
-- Authentication
+* User Guide
 
-- Permissions: RPC Calls, IP addresses
-
-- User Guide
-
-- Client app for encrypted connections
+* Client app for encrypted connections
