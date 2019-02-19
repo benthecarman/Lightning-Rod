@@ -4,6 +4,8 @@
 
 - Working RPC calls
 
+- Timeout
+
 - Config: address, port, rpcauth, max connections
 
 - Permissions: RPC Calls, IP addresses
