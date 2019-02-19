@@ -56,7 +56,6 @@ std::string RPCConnection::execute(std::string method, std::string params)
     if (curl)
     {
         std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\",\"method\": \"" + method + "\", \"params\": " + params + " }";
-        // const char *data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getbestblockhash\", \"params\": [] }";
 
         headers = curl_slist_append(headers, "content-type: text/plain;");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
@@ -79,7 +78,8 @@ std::string RPCConnection::execute(std::string method, std::string params)
     return s;
 }
 
-std::string RPCConnection::testExecute()
+// Used for testing 
+std::string RPCConnection::execute()
 {
     CURL *curl = curl_easy_init();
     struct curl_slist *headers = NULL;
@@ -88,7 +88,7 @@ std::string RPCConnection::testExecute()
 
     if (curl)
     {
-        std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getbestblockhash\", \"params\": [] }";
+        std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\",\"method\": \"getbestblockhash\", \"params\": [] }";
 
         headers = curl_slist_append(headers, "content-type: text/plain;");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
