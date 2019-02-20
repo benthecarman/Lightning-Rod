@@ -6,6 +6,8 @@
   * RPCAuth
   * Max Connections
 
+* Logging
+
 * Authentication
 
 * Permissions:
