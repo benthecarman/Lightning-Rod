@@ -2,14 +2,17 @@
 
 #include "rpcconnection.h"
 #include "server.h"
+#include "config.h"
 
 int main(int argc, char *argv[])
 {
-	RPCConnection rpc("http://127.0.0.1:8332/", "benLinuxPC828:fgCy5QaEgu&C&q$7");
+	Config cfg = createConfig(argc, argv);
 
-	Server s(rpc, 8331);
+	RPCConnection* rpc = new RPCConnection(cfg.getHost(), "benLinuxPC828:fgCy5QaEgu&C&q$7");
 
-	s.start();
+	Server* s = new Server(*rpc, cfg.getPort());
+
+	s->start();
 
 	return 0;
 }

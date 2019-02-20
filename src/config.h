@@ -17,22 +17,25 @@ class Config
     std::string rpcAuth;
     std::string configdir;
 
-    public:
-        Config(bool, int, int, std::string, std::string, std::string);
-        void setPort(int);
-        int getPort();
-        bool isDaemon();
-        void setIsDaemon(bool);
-        void setMaxConnections(int);
-        int getMaxConnections();
-        std::string getHost();
-        void setHost(std::string);
-        std::string getRPCAuth();
-        void setRPCAuth(std::string);
-        void setConfigDir(std::string);
-        std::string getConfigDir();
+  public:
+    Config(bool, int, int, std::string, std::string, std::string);
+    void setPort(const int);
+    int getPort();
+    bool isDaemon();
+    void setIsDaemon(const bool);
+    void setMaxConnections(const int);
+    int getMaxConnections();
+    std::string getHost();
+    void setHost(std::string const &);
+    std::string getRPCAuth();
+    void setRPCAuth(std::string const &);
+    void setConfigDir(std::string const &);
+    std::string getConfigDir();
 };
 
-Config createConfig(int argv, char *argc[]);
+Config createConfig(const int argv, char *argc[]);
+
+void parseArgs(Config*, const int, char **);
+void parseConfig(Config *);
 
 #endif
