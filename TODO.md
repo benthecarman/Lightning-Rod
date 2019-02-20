@@ -16,4 +16,8 @@
 
 * User Guide
 
+* Server list
+
+* Server ping
+
 * Client app for encrypted connections

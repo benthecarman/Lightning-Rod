@@ -88,7 +88,7 @@ Config createConfig(const int argv, char *argc[])
 
 void parseArgs(Config *cfg, const int argv, char *argc[])
 {
-    
+
 }
 
 void parseConfig(Config *cfg)
