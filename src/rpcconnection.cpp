@@ -6,10 +6,10 @@
 
 #include "rpcconnection.h"
 
-RPCConnection::RPCConnection(std::string url, std::string userpwd)
+RPCConnection::RPCConnection(std::string url, std::string userpwd):
+    url(url),
+    userpwd(userpwd)
 {
-    this->url = url;
-    this->userpwd = userpwd;
 }
 
 void RPCConnection::setURL(std::string url)
