@@ -2,7 +2,13 @@
 
 #include "config.h"
 
-Config::Config()
+Config::Config(bool daemon = DEFAULT_DAEMON, int port = DEFAULT_PORT, int maxConnections = DEFAULT_MAX_CONNECTIONS, std::string host = DEFAULT_HOST, std::string rpcAuth = DEFAULT_RPC_AUTH, std::string configdir = DEFAULT_CONFIG_DIR):
+    daemon(daemon),
+    port(port),
+    maxConnections(maxConnections),
+    host(host),
+    rpcAuth(rpcAuth),
+    configdir(configdir)
 {
 
 }
@@ -65,4 +71,11 @@ std::string Config::getConfigDir()
 void Config::setConfigDir(std::string dir)
 {
     this->configdir = dir;
+}
+
+Config createConfig(int argv, char* argc[])
+{
+    Config conf();
+
+    return conf;
 }
