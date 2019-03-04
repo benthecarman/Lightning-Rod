@@ -96,7 +96,7 @@ std::string Config::toString()
     std::string str;
 
     str += "Debug mode: " + std::to_string(this->debug) + "\n";
-    str += "isDaemon: " + std::to_string(this->daemon) + "\n";
+    str += "daemon: " + std::to_string(this->daemon) + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
     str += "maxconnections: " + std::to_string(this->maxConnections) + "\n";
@@ -113,7 +113,7 @@ Config createConfig(const int argv, char *argc[])
     int i;
     for (i = 1; i < argv; ++i)
     {
-        std::string tmp(argc[i], 0, strlen(argc[i]));
+        std::string tmp(argc[i]);
 
         if (tmp.find("--configdir=") == 0)
         {
@@ -135,7 +135,7 @@ void parseArgs(Config *cfg, const int argv, char *argc[])
     int i;
     for (i = 1; i < argv; ++i)
     {
-        std::string tmp(argc[i], 0, strlen(argc[i]));
+        std::string tmp(argc[i]);
 
         if (tmp.find("--port=") == 0)
         {
