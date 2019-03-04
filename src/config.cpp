@@ -81,8 +81,8 @@ Config createConfig(const int argv, char *argc[])
 {
     Config *conf = new Config();
 
-    parseArgs(conf, argv, argc);
     parseConfig(conf);
+    parseArgs(conf, argv, argc);
 
     return conf;
 }
