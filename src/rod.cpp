@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
 	Config cfg = createConfig(argc, argv);
 
-	RPCConnection *rpc = new RPCConnection(cfg.getHost(), "benLinuxPC828:fgCy5QaEguCq7");
+	RPCConnection *rpc = new RPCConnection(cfg.getHost(), cfg.getRPCAuth());
 
 	Server *s = new Server(*rpc, cfg.getPort());
 

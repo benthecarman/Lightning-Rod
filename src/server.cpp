@@ -115,35 +115,46 @@ void handleConnection(int sock, RPCConnection rpc)
 
 	std::string sendString = rpc.execute(data);
 
-	// int s = send(sock, sendString.c_str(), sendString.length(), 0);
-	printf("\nMessage sent!\n");
-	printf("\n%s\n", sendString.c_str());
+	bool socksend = true;
 
-	socklen_t len;
-	struct sockaddr_storage addr;
-	char ipstr[INET6_ADDRSTRLEN];
-	int port;
-
-	len = sizeof addr;
-	getpeername(sock, (struct sockaddr *)&addr, &len);
-
-	// deal with both IPv4 and IPv6:
-	if (addr.ss_family == AF_INET)
+	if (socksend)
 	{
-		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-		port = ntohs(s->sin_port);
-		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+		int s = send(sock, sendString.c_str(), sendString.length(), 0);
+		printf("Sent: %s\n", sendString.c_str());
+		printf("Sent l: %d\n", sendString.length());
+		printf("Send: %d\n", s);
 	}
 	else
-	{ // AF_INET6
-		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
-		port = ntohs(s->sin6_port);
-		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+	{
+		socklen_t len;
+		struct sockaddr_storage addr;
+		char ipstr[INET6_ADDRSTRLEN];
+		int port;
+
+		len = sizeof addr;
+		getpeername(sock, (struct sockaddr *)&addr, &len);
+
+		// deal with both IPv4 and IPv6:
+		if (addr.ss_family == AF_INET)
+		{
+			struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+			port = ntohs(s->sin_port);
+			inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+		}
+		else // AF_INET6
+		{
+			struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+			port = ntohs(s->sin6_port);
+			inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+		}
+
+		std::string *ip = new std::string(ipstr, 0, strlen(ipstr));
+		std::string url = *ip + ":" + std::to_string(port);
+		rpc.sendBack(url, sendString);
 	}
 
-	std::string *ip = new std::string(ipstr, 0, strlen(ipstr));
-	std::string url = *ip + ":" + std::to_string(port);
-	rpc.sendBack(url, sendString);
+	printf("\nMessage sent!\n");
+	printf("\n%s\n", sendString.c_str());
 
 	close(sock);
 }
