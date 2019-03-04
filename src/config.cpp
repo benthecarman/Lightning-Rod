@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 
 #include "config.h"
 
@@ -78,7 +79,7 @@ void Config::setConfigDir(std::string const &dir)
 
 Config createConfig(const int argv, char *argc[])
 {
-    Config* conf = new Config();
+    Config *conf = new Config();
 
     parseArgs(conf, argv, argc);
     parseConfig(conf);
@@ -88,10 +89,19 @@ Config createConfig(const int argv, char *argc[])
 
 void parseArgs(Config *cfg, const int argv, char *argc[])
 {
+    int i;
+    for (i = 1; i < argv; ++i)
+    {
+        std::string tmp(argc[i], 0, strlen(argc[i]));
 
+        if (tmp.find("--port=") == 0)
+        {
+            int pos = tmp.find("--port=");
+            // cfg->setPort(std::totmp.substr(pos + 7));
+        }
+    }
 }
 
 void parseConfig(Config *cfg)
 {
-
 }

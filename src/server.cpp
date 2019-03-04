@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <arpa/inet.h>
 
 #include <string>
 #include <cstring>
@@ -10,42 +11,41 @@
 #include "rpcconnection.h"
 #include "server.h"
 
-Server::Server(RPCConnection r, int port):
-    rpc(r),
-    port(port)
+Server::Server(RPCConnection r, int port) : rpc(r),
+											port(port)
 {
 }
 
 void Server::setRPC(RPCConnection rpc)
 {
-    this->rpc = rpc;
+	this->rpc = rpc;
 }
 
 RPCConnection Server::getRPC()
 {
-    return this->rpc;
+	return this->rpc;
 }
 
 void Server::setPort(int port)
 {
-    this->port = port;
+	this->port = port;
 }
 
 int Server::getPort()
 {
-    return this->port;
+	return this->port;
 }
 
 bool Server::isRunning()
 {
-    return this->running;
+	return this->running;
 }
 
 void Server::start()
 {
-    this->running = true;
+	this->running = true;
 
-    int sock, newSock;
+	int sock, newSock;
 	socklen_t c;
 
 	struct sockaddr_in serv_addr, cli_addr;
@@ -106,29 +106,58 @@ void Server::start()
 
 void handleConnection(int sock, RPCConnection rpc)
 {
-    char buffer[1024] = {0};
-    int valread = read(sock, buffer, 1024);
+	char buffer[1024] = {0};
+	int valread = read(sock, buffer, 1024);
 
-    std::string data = parseHTTPRequest(buffer);
+	printf("\n%s\n", buffer);
+
+	std::string data = parseHTTPRequest(buffer);
 
 	std::string sendString = rpc.execute(data);
 
-    int s = send(sock, sendString.c_str(), sendString.length(), 0);
-    printf("\nMessage sent!\n");
+	// int s = send(sock, sendString.c_str(), sendString.length(), 0);
+	printf("\nMessage sent!\n");
+	printf("\n%s\n", sendString.c_str());
 
-    close(sock);
+	socklen_t len;
+	struct sockaddr_storage addr;
+	char ipstr[INET6_ADDRSTRLEN];
+	int port;
+
+	len = sizeof addr;
+	getpeername(sock, (struct sockaddr *)&addr, &len);
+
+	// deal with both IPv4 and IPv6:
+	if (addr.ss_family == AF_INET)
+	{
+		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+		port = ntohs(s->sin_port);
+		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+	}
+	else
+	{ // AF_INET6
+		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+		port = ntohs(s->sin6_port);
+		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+	}
+
+	std::string *ip = new std::string(ipstr, 0, strlen(ipstr));
+	std::string url = *ip + ":" + std::to_string(port);
+	rpc.sendBack(url, sendString);
+
+	close(sock);
 }
 
 std::string parseHTTPRequest(char buffer[1024])
 {
-    std::string b(buffer, 0, strlen(buffer));
+	std::string b(buffer, 0, strlen(buffer));
 
-    int pos = b.find("{\"jsonrpc\":");
+	int pos = b.find("{\"");
 
-    if (pos != std::string::npos)
-    {
+	if (pos != std::string::npos)
+	{
 		return b.substr(pos);
-    }
+	}
 
-    return "";
+	return "";
 }
