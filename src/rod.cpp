@@ -1,18 +1,29 @@
 #include <string>
+#include <thread>
 
 #include "rpcconnection.h"
 #include "server.h"
 #include "config.h"
 
+void daemon(Server *s)
+{
+	s->start();
+}
+
 int main(int argc, char *argv[])
 {
 	Config cfg = createConfig(argc, argv);
 
-	RPCConnection *rpc = new RPCConnection(cfg.getHost(), cfg.getRPCAuth());
+	Server *s = new Server(cfg);
 
-	Server *s = new Server(*rpc, cfg.getPort());
-
-	s->start();
+	if (cfg.isDaemon())
+	{
+		std::thread t(daemon, s);
+		t.detach();
+		pthread_exit(NULL);
+	}
+	else
+		s->start();
 
 	return 0;
 }

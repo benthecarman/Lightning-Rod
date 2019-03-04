@@ -9,31 +9,13 @@
 #include <thread>
 
 #include "rpcconnection.h"
+#include "config.h"
 #include "server.h"
 
-Server::Server(RPCConnection r, int port) : rpc(r),
-											port(port)
+Server::Server(Config c) : cfg(c)
 {
-}
-
-void Server::setRPC(RPCConnection rpc)
-{
-	this->rpc = rpc;
-}
-
-RPCConnection Server::getRPC()
-{
-	return this->rpc;
-}
-
-void Server::setPort(int port)
-{
-	this->port = port;
-}
-
-int Server::getPort()
-{
-	return this->port;
+	this->rpc = new RPCConnection(this->cfg.getHost(), this->cfg.getRPCAuth());
+	this->rpc = new RPCConnection(this->cfg.getHost(), this->cfg.getRPCAuth());
 }
 
 bool Server::isRunning()
@@ -64,7 +46,7 @@ void Server::start()
 	//Set necessary variables for connection
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(this->port);
+	serv_addr.sin_port = htons(this->cfg.getPort());
 
 	int optVal = 1;
 
@@ -98,7 +80,7 @@ void Server::start()
 			exit(1);
 		}
 
-		std::thread t(handleConnection, newSock, this->rpc);
+		std::thread t(handleConnection, newSock, *(this->rpc));
 		t.detach();
 		printf("Number of requests served: %d\n", ++count);
 	}

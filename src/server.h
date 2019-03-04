@@ -2,22 +2,18 @@
 #define SERVER_H
 
 #include "rpcconnection.h"
+#include "config.h"
 
 class Server
 {
-    RPCConnection rpc;
-    int port;
-    bool running = false;
+  Config cfg;
+  RPCConnection *rpc;
+  bool running = false;
 
-  public:
-    Server(RPCConnection, int);
-    void start();
-
-    void setRPC(RPCConnection);
-    RPCConnection getRPC();
-    void setPort(int);
-    int getPort();
-    bool isRunning();
+public:
+  Server(Config);
+  void start();
+  bool isRunning();
 };
 
 void handleConnection(int sock, RPCConnection rpc);
