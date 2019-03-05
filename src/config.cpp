@@ -167,13 +167,15 @@ void parseConfig(Config *cfg)
 
 void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
 {
-    if (line.find("#") == 0) // Is a comment
+    if (line.find("#") == 0 || line.find(";") == 0) // Is a comment
         return;
 
     std::string tmp = isArg ? line : "--" + line; //Make it easier to pasrse
 
     if (tmp.find("#") > 0) //Remove comment at end of line
         tmp = tmp.substr(0, tmp.find("#"));
+    if (tmp.find(";") > 0) //Remove comment at end of line
+        tmp = tmp.substr(0, tmp.find(";"));
 
     if (tmp.find("--port=") == 0 || tmp.find("--port =") == 0)
     {
