@@ -66,9 +66,9 @@ void Server::start()
 	c = sizeof(cli_addr);
 
 	printf("Testing connection\n");
-	std::string test = this->rpc->execute("{\"method\":\"echo\",\"params\":[],\"id\":1}");
+	std::string test = this->rpc->execute();
 
-	if (test.find("{\"result\":[],\"error\":null,\"id\":1}") != 0)
+	if (test.find("{\"result\":[],\"error\":null,\"id\":test}") != 0)
 	{
 		printf("Initial RPC Test failed, bitcoin-cli may not be running or your lightning rod is configured incorrectly.\n");
 		exit(1);
@@ -100,6 +100,17 @@ void Server::start()
 	}
 }
 
+std::string createHeader(std::string data)
+{
+	std::string header;
+	header += "POST / HTTP/1.1\r\n";
+	header += "Host: 127.0.0.1\r\n";
+	header += "Connection: close\r\n";
+	header += "Content-Length: " + std::to_string(data.length()) + "\r\n\n";
+
+	return header;
+}
+
 void handleConnection(const int sock, RPCConnection rpc)
 {
 	char buffer[1024] = {0};
@@ -115,10 +126,8 @@ void handleConnection(const int sock, RPCConnection rpc)
 
 	if (socksend)
 	{
-		int s = send(sock, sendString.c_str(), sendString.length(), 0);
-		printf("Sent: %s\n", sendString.c_str());
-		printf("Sent l: %d\n", sendString.length());
-		printf("Send: %d\n", s);
+		std::string tmp = createHeader(sendString) + sendString;
+		int s = send(sock, tmp.c_str(), tmp.length(), 0);
 	}
 	else
 	{

@@ -7,7 +7,7 @@
 #include "rpcconnection.h"
 
 RPCConnection::RPCConnection(const std::string url, const std::string userpwd) : url(url),
-                                                                     userpwd(userpwd)
+                                                                                 userpwd(userpwd)
 {
 }
 
@@ -128,6 +128,6 @@ void RPCConnection::sendBack(const std::string url, const std::string data)
 // Used for testing
 std::string RPCConnection::execute()
 {
-    std::string data = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\",\"method\": \"getblockcount\", \"params\": [] }";
+    std::string data = "{\"method\":\"echo\",\"params\":[],\"id\":test}";
     return execute(data);
 }
