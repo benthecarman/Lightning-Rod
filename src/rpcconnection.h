@@ -3,17 +3,18 @@
 
 class RPCConnection
 {
+private:
   std::string url, userpwd;
 
 public:
-  RPCConnection(std::string, std::string);
-  void setURL(std::string);
+  RPCConnection(const std::string, const std::string);
+  void setURL(const std::string);
   std::string getURL();
-  void setUserPwd(std::string);
+  void setUserPwd(const std::string);
   std::string getUserPwd();
-  std::string execute(std::string);
+  std::string execute(const std::string);
   std::string execute();
-  void sendBack(std::string, std::string);
+  void sendBack(const std::string, const std::string);
 };
 
 #endif

@@ -6,17 +6,17 @@
 
 #include "rpcconnection.h"
 
-RPCConnection::RPCConnection(std::string url, std::string userpwd) : url(url),
+RPCConnection::RPCConnection(const std::string url, const std::string userpwd) : url(url),
                                                                      userpwd(userpwd)
 {
 }
 
-void RPCConnection::setURL(std::string url)
+void RPCConnection::setURL(const std::string url)
 {
     this->url = url;
 }
 
-void RPCConnection::setUserPwd(std::string userpwd)
+void RPCConnection::setUserPwd(const std::string userpwd)
 {
     this->userpwd = userpwd;
 }
@@ -46,7 +46,7 @@ size_t CurlWrite_CallbackFunc_StdString(void *contents, size_t size, size_t nmem
     return newLength;
 }
 
-std::string RPCConnection::execute(std::string data)
+std::string RPCConnection::execute(const std::string data)
 {
     CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     if (res != 0)
@@ -89,7 +89,7 @@ std::string RPCConnection::execute(std::string data)
     return s;
 }
 
-void RPCConnection::sendBack(std::string url, std::string data)
+void RPCConnection::sendBack(const std::string url, const std::string data)
 {
     CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     if (res != 0)

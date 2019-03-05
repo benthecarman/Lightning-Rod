@@ -7,7 +7,7 @@
 
 void parseArgs(Config *, const int, char **);
 void parseConfig(Config *);
-void parseConfigLine(Config *cfg, const std::string &line, bool isArg);
+void parseConfigLine(Config *cfg, const std::string &line, const bool isArg);
 
 Config::Config(bool daemon = DEFAULT_DAEMON,
                bool debug = DEFAULT_DEBUG,
@@ -165,7 +165,7 @@ void parseConfig(Config *cfg)
     }
 }
 
-void parseConfigLine(Config *cfg, const std::string &line, bool isArg)
+void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
 {
     if (line.find("#") == 0) // Is a comment
         return;

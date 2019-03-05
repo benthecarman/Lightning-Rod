@@ -3,7 +3,6 @@
 
 #include <unistd.h>
 
-#include "rpcconnection.h"
 #include "server.h"
 #include "config.h"
 
