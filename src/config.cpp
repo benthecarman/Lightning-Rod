@@ -161,16 +161,20 @@ void parseConfig(Config *cfg)
     }
     else
     {
-        printf("No config file found, using defaults\n");
+        //TODO: Create sample config
+        printf("No config file found, using defaults.\n");
     }
 }
 
 void parseConfigLine(Config *cfg, const std::string &line, bool isArg)
 {
-    if (line.find("#") == 0 && !isArg)
+    if (line.find("#") == 0) // Is a comment
         return;
 
-    std::string tmp = isArg ? line : "--" + line;
+    std::string tmp = isArg ? line : "--" + line; //Make it easier to pasrse
+
+    if (tmp.find("#") > 0) //Remove comment at end of line
+        tmp = tmp.substr(0, tmp.find("#"));
 
     if (tmp.find("--port=") == 0 || tmp.find("--port =") == 0)
     {
