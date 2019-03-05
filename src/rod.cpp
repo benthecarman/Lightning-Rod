@@ -1,14 +1,11 @@
 #include <string>
 #include <thread>
 
+#include <unistd.h>
+
 #include "rpcconnection.h"
 #include "server.h"
 #include "config.h"
-
-void startServer(Server *s)
-{
-	s->start();
-}
 
 int main(int argc, char *argv[])
 {
@@ -18,15 +15,11 @@ int main(int argc, char *argv[])
 
 	if (cfg.isDaemon())
 	{
-		printf("d\n");
-		std::thread t(startServer, s);
-		t.detach();
-		pthread_exit(NULL);
+		if (fork() == 0)
+			s->start();
 	}
 	else
-	{
-		startServer(s);
-	}
+		s->start();
 
 	return 0;
 }

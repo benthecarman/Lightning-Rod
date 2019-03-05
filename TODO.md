@@ -1,12 +1,8 @@
 # Todo
 
-* Config:
-  * Address
-  * Port
-  * RPCAuth
-  * Max Connections
-
 * Logging
+  * Debug mode prints and logs, normal just logs
+    * Make a whole class to handle this
 
 * Authentication
 

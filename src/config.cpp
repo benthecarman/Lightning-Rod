@@ -2,7 +2,13 @@
 #include <cstring>
 #include <fstream>
 
+#include <sys/socket.h>
+
 #include "config.h"
+
+void parseArgs(Config *, const int, char **);
+void parseConfig(Config *);
+void parseConfigLine(Config *cfg, const std::string &line, bool isArg);
 
 Config::Config(bool daemon = DEFAULT_DAEMON,
                bool debug = DEFAULT_DEBUG,
@@ -137,34 +143,7 @@ void parseArgs(Config *cfg, const int argv, char *argc[])
     {
         std::string tmp(argc[i]);
 
-        if (tmp.find("--port=") == 0)
-        {
-            cfg->setPort(std::stoi(tmp.substr(7)));
-        }
-        else if (tmp.find("--maxconnections=") == 0)
-        {
-            cfg->setMaxConnections(std::stoi(tmp.substr(17)));
-        }
-        else if (tmp.find("--host=") == 0)
-        {
-            cfg->setHost(tmp.substr(7));
-        }
-        else if (tmp.find("--rpcauth=") == 0)
-        {
-            cfg->setRPCAuth(tmp.substr(10));
-        }
-        else if (tmp.compare("--debug") == 0 || tmp.compare("-db") == 0)
-        {
-            cfg->setDebug(true);
-        }
-        else if (tmp.compare("--daemon") == 0 || tmp.compare("-d") == 0)
-        {
-            cfg->setIsDaemon(true);
-        }
-        else
-        {
-            printf("Unable to proccess config option %s\n", tmp.c_str());
-        }
+        parseConfigLine(cfg, tmp, true);
     }
 }
 
@@ -176,71 +155,165 @@ void parseConfig(Config *cfg)
     {
         while (getline(configFile, tmp))
         {
-            if (tmp.find("#") == 0)
-            {
-                continue;
-            }
-            else if (tmp.find("port=") == 0)
-            {
-                cfg->setPort(std::stoi(tmp.substr(5)));
-            }
-            else if (tmp.find("maxconnections=") == 0)
-            {
-                cfg->setMaxConnections(std::stoi(tmp.substr(15)));
-            }
-            else if (tmp.find("host=") == 0)
-            {
-                cfg->setHost(tmp.substr(5));
-            }
-            else if (tmp.find("rpcauth=") == 0)
-            {
-                cfg->setRPCAuth(tmp.substr(8));
-            }
-            else if (tmp.find("daemon=") == 0)
-            {
-                std::string d = tmp.substr(7);
-                int x = -1;
-                try
-                {
-                    x = std::stoi(d);
-                }
-                catch (std::invalid_argument ignored)
-                {
-                }
-                if (x == 1 || d.compare("true") == 0)
-                    cfg->setIsDaemon(true);
-                else if (x == 0 || d.compare("false") == 0)
-                    cfg->setIsDaemon(false);
-                else
-                    printf("unable to proccess daemon config option\n");
-            }
-            else if (tmp.find("debug=") == 0)
-            {
-                std::string d = tmp.substr(6);
-                int x = -1;
-                try
-                {
-                    x = std::stoi(d);
-                }
-                catch (std::invalid_argument ignored)
-                {
-                }
-                if (x == 1 || d.compare("true") == 0)
-                    cfg->setDebug(true);
-                else if (x == 0 || d.compare("false") == 0)
-                    cfg->setDebug(false);
-                else
-                    printf("unable to proccess daemon config option\n");
-            }
-            else
-            {
-                printf("Unable to proccess config option %s\n", tmp.c_str());
-            }
+            parseConfigLine(cfg, tmp, false);
         }
         configFile.close();
     }
     else
     {
         printf("No config file found, using defaults\n");
+    }
+}
+
+void parseConfigLine(Config *cfg, const std::string &line, bool isArg)
+{
+    if (line.find("#") == 0 && !isArg)
+        return;
+
+    std::string tmp = isArg ? line : "--" + line;
+
+    if (tmp.find("--port=") == 0 || tmp.find("--port =") == 0)
+    {
+        int sub = 7;
+        if (tmp.find("--port = ") == 0)
+            sub = 9;
+        else if (tmp.find("--port =") == 0)
+            sub = 8;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+            printf("Invalid port number (%s), must be between 1024 and 65535\n", d.c_str());
+            exit(1);
+        }
+        if (x <= 1024 || x > 65535)
+        {
+            printf("Invalid port number (%d), must be between 1024 and 65535\n", x);
+            exit(1);
+        }
+        else
+            cfg->setPort(x);
+    }
+    else if (tmp.find("--maxconnections=") == 0 || tmp.find("--maxconnections =") == 0)
+    {
+        int sub = 17;
+        if (tmp.find("--maxconnections = ") == 0)
+            sub = 19;
+        else if (tmp.find("--maxconnections =") == 0)
+            sub = 18;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+            printf("Invalid max connections (%s), must be greater than 1 (0 for unlimited).\n", d.c_str());
+            exit(1);
+        }
+        if (x < 0)
+        {
+            printf("Invalid max connections (%d), must be greater than 1 (0 for unlimited).\n", x);
+            exit(1);
+        }
+        else if (x == 0)
+        {
+            cfg->setMaxConnections(SOMAXCONN);
+        }
+        else
+            cfg->setMaxConnections(x);
+    }
+    else if (tmp.find("--host=") == 0 || tmp.find("--host =") == 0)
+    {
+        int sub = 7;
+        if (tmp.find("--host = ") == 0)
+            sub = 9;
+        else if (tmp.find("--host =") == 0 || tmp.find("--host= ") == 0)
+            sub = 8;
+
+        cfg->setHost(tmp.substr(sub));
+    }
+    else if (tmp.find("--rpcauth=") == 0 || tmp.find("--rpcauth =") == 0)
+    {
+        int sub = 10;
+        if (tmp.find("--rpcauth = ") == 0)
+            sub = 12;
+        else if (tmp.find("--rpcauth =") == 0 || tmp.find("--rpcauth= ") == 0)
+            sub = 11;
+
+        cfg->setRPCAuth(tmp.substr(sub));
+    }
+    else if (!isArg && (tmp.find("--daemon=") == 0 || tmp.find("--daemon =") == 0))
+    {
+        int sub = 9;
+        if (tmp.find("--daemon = ") == 0)
+            sub = 11;
+        else if (tmp.find("--daemon =") == 0 || tmp.find("--daemon= ") == 0)
+            sub = 10;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+        }
+        if (x == 1 || d.compare("true") == 0)
+            cfg->setIsDaemon(true);
+        else if (x == 0 || d.compare("false") == 0)
+            cfg->setIsDaemon(false);
+        else
+        {
+            printf("Unable to proccess daemon config option\n");
+            exit(1);
+        }
+    }
+    else if (isArg && (tmp.compare("--daemon") == 0 || tmp.compare("-d") == 0))
+    {
+        cfg->setIsDaemon(true);
+    }
+    else if (!isArg && (tmp.find("--debug=") == 0 || tmp.find("--debug =") == 0))
+    {
+        int sub = 8;
+        if (tmp.find("--debug = ") == 0)
+            sub = 10;
+        else if (tmp.find("--debug =") == 0 || tmp.find("--debug= ") == 0)
+            sub = 9;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+        }
+        if (x == 1 || d.compare("true") == 0)
+            cfg->setDebug(true);
+        else if (x == 0 || d.compare("false") == 0)
+            cfg->setDebug(false);
+        else
+        {
+            printf("Unable to proccess debug config option\n");
+            exit(1);
+        }
+    }
+    else if (isArg && (tmp.compare("--debug") == 0 || tmp.compare("-db") == 0))
+    {
+        cfg->setDebug(true);
+    }
+    else
+    {
+        printf("Unable to proccess config option %s\n", tmp.c_str());
     }
 }

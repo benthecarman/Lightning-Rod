@@ -40,7 +40,4 @@ class Config
 
 Config createConfig(const int argv, char *argc[]);
 
-void parseArgs(Config*, const int, char **);
-void parseConfig(Config *);
-
 #endif

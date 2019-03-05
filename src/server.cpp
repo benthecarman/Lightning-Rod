@@ -62,11 +62,25 @@ void Server::start()
 		exit(1);
 	}
 
-	listen(sock, SOMAXCONN);
+	listen(sock, this->cfg.getMaxConnections());
 	c = sizeof(cli_addr);
+
+	printf("Testing connection\n");
+	std::string test = this->rpc->execute("{\"method\":\"echo\",\"params\":[],\"id\":1}");
+
+	if (test.find("{\"result\":[],\"error\":null,\"id\":1}") != 0)
+	{
+		printf("Initial RPC Test failed, bitcoin-cli may not be running or your lightning rod is configured incorrectly.\n");
+		exit(1);
+	}
+	else
+	{
+		printf("Tests complete\n\n");
+	}
 
 	printf("Able to start accepting connections\n");
 	signal(SIGCHLD, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
 
 	int count = 0;
 	while (this->running)
