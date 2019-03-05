@@ -100,7 +100,7 @@ void Server::start()
 	}
 }
 
-void handleConnection(int sock, RPCConnection rpc)
+void handleConnection(const int sock, RPCConnection rpc)
 {
 	char buffer[1024] = {0};
 	int valread = read(sock, buffer, 1024);
@@ -155,7 +155,7 @@ void handleConnection(int sock, RPCConnection rpc)
 	close(sock);
 }
 
-std::string parseHTTPRequest(char buffer[1024])
+std::string parseHTTPRequest(const char buffer[1024])
 {
 	std::string b(buffer, 0, strlen(buffer));
 

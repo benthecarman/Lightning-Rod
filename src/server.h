@@ -6,6 +6,7 @@
 
 class Server
 {
+private:
   Config cfg;
   RPCConnection *rpc;
   bool running = false;
@@ -16,7 +17,7 @@ public:
   bool isRunning();
 };
 
-void handleConnection(int sock, RPCConnection rpc);
-std::string parseHTTPRequest(char *buffer);
+void handleConnection(const int sock, RPCConnection rpc);
+std::string parseHTTPRequest(const char *buffer);
 
 #endif
