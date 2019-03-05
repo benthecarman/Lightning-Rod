@@ -5,7 +5,7 @@
 #include "server.h"
 #include "config.h"
 
-void daemon(Server *s)
+void startServer(Server *s)
 {
 	s->start();
 }
@@ -18,12 +18,15 @@ int main(int argc, char *argv[])
 
 	if (cfg.isDaemon())
 	{
-		std::thread t(daemon, s);
+		printf("d\n");
+		std::thread t(startServer, s);
 		t.detach();
 		pthread_exit(NULL);
 	}
 	else
-		s->start();
+	{
+		startServer(s);
+	}
 
 	return 0;
 }

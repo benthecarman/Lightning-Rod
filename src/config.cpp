@@ -176,7 +176,11 @@ void parseConfig(Config *cfg)
     {
         while (getline(configFile, tmp))
         {
-            if (tmp.find("port=") == 0)
+            if (tmp.find("#") == 0)
+            {
+                continue;
+            }
+            else if (tmp.find("port=") == 0)
             {
                 cfg->setPort(std::stoi(tmp.substr(5)));
             }
@@ -195,10 +199,36 @@ void parseConfig(Config *cfg)
             else if (tmp.find("daemon=") == 0)
             {
                 std::string d = tmp.substr(7);
-                if (std::stoi(d) == 1 || d.compare("true") == 0)
+                int x = -1;
+                try
+                {
+                    x = std::stoi(d);
+                }
+                catch (std::invalid_argument ignored)
+                {
+                }
+                if (x == 1 || d.compare("true") == 0)
                     cfg->setIsDaemon(true);
-                else if (std::stoi(d) == 0 || d.compare("false") == 0)
+                else if (x == 0 || d.compare("false") == 0)
                     cfg->setIsDaemon(false);
+                else
+                    printf("unable to proccess daemon config option\n");
+            }
+            else if (tmp.find("debug=") == 0)
+            {
+                std::string d = tmp.substr(6);
+                int x = -1;
+                try
+                {
+                    x = std::stoi(d);
+                }
+                catch (std::invalid_argument ignored)
+                {
+                }
+                if (x == 1 || d.compare("true") == 0)
+                    cfg->setDebug(true);
+                else if (x == 0 || d.compare("false") == 0)
+                    cfg->setDebug(false);
                 else
                     printf("unable to proccess daemon config option\n");
             }
