@@ -68,9 +68,12 @@ void Server::start()
 	printf("Testing connection\n");
 	std::string test = this->rpc->execute();
 
-	if (test.find("{\"result\":[],\"error\":null,\"id\":test}") != 0)
+	// TODO check for RPC warming up
+	if (test.find("{\"result\":[],\"error\":null,\"id\":\"test\"}") != 0)
 	{
 		printf("Initial RPC Test failed, bitcoin-cli may not be running or your lightning rod is configured incorrectly.\n");
+		if (this->cfg.isDebug())
+			printf("%s\n", test.c_str());
 		exit(1);
 	}
 	else

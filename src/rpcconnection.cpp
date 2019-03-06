@@ -128,6 +128,6 @@ void RPCConnection::sendBack(const std::string url, const std::string data)
 // Used for testing
 std::string RPCConnection::execute()
 {
-    std::string data = "{\"method\":\"echo\",\"params\":[],\"id\":test}";
+    std::string data = "{\"method\":\"echo\",\"params\":[],\"id\":\"test\"}";
     return execute(data);
 }
