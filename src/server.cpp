@@ -15,7 +15,6 @@
 Server::Server(Config c) : cfg(c)
 {
 	this->rpc = new RPCConnection(this->cfg.getHost(), this->cfg.getRPCAuth());
-	this->rpc = new RPCConnection(this->cfg.getHost(), this->cfg.getRPCAuth());
 }
 
 bool Server::isRunning()
