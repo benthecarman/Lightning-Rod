@@ -130,7 +130,7 @@ Config createConfig(const int argv, char *argc[])
     parseArgs(cfg, argv, argc);
 
     if (cfg->isDebug())
-        printf("Config:\n\n%s\n", cfg->toString().c_str());
+        printf("Current Config:\n\n%s\n", cfg->toString().c_str());
 
     return *cfg;
 }
