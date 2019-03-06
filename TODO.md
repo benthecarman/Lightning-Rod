@@ -11,6 +11,8 @@
   * IP addresses
 
 * User Guide
+  * Sparks (User)
+  * Rods (Server)
 
 * Server list
 
