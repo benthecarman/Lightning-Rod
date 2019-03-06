@@ -8,6 +8,8 @@
 #include <cstring>
 #include <thread>
 
+#include "../depends/mongoose.h"
+
 #include "rpcconnection.h"
 #include "config.h"
 #include "server.h"
