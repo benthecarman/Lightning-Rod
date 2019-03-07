@@ -2,12 +2,12 @@ CC=g++
 CFLAGS=-w -pthread
 ENDFLAGS=-lcurl
 
-default: rod
+default: rod.o
 
-rod: src/rod.cpp
-	$(CC) $(CFLAGS) src/rod.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp depends/mongoose.c -o rod.o $(ENDFLAGS)
+rod.o: src/rod.cpp
+	$(CC) $(CFLAGS) src/rod.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp depends/mongoose.c -o rod.o -I depends $(ENDFLAGS)
 
-test: test.cpp
+test.o: test.cpp
 	$(CC) $(CFLAGS) test.cpp src/rpcconnection.cpp -o test.o $(ENDFLAGS)
 
 clean:

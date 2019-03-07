@@ -8,7 +8,7 @@
 #include <cstring>
 #include <thread>
 
-#include "../depends/mongoose.h"
+#include "mongoose.h"
 
 #include "rpcconnection.h"
 #include "config.h"
