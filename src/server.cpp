@@ -14,6 +14,8 @@
 #include "config.h"
 #include "server.h"
 
+static void ev_handler(struct mg_connection *nc, int ev, void *p, void *r);
+
 Server::Server(Config c) : cfg(c)
 {
 	this->rpc = new RPCConnection(this->cfg.getHost(), this->cfg.getRPCAuth());
@@ -26,46 +28,6 @@ bool Server::isRunning()
 
 void Server::start()
 {
-	this->running = true;
-
-	int sock, newSock;
-	socklen_t c;
-
-	struct sockaddr_in serv_addr, cli_addr;
-
-	//Create socket
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-
-	if (sock < 0)
-	{
-		perror("ERROR creating socket");
-		exit(1);
-	}
-
-	memset((char *)&serv_addr, '\0', sizeof(serv_addr));
-
-	//Set necessary variables for connection
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(this->cfg.getPort());
-
-	int optVal = 1;
-
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&optVal, sizeof(int)) < 0)
-	{
-		perror("ERROR setsockopt(SO_REUSEADDR) failed");
-		exit(1);
-	}
-
-	if (bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-	{
-		perror("ERROR binding socket");
-		exit(1);
-	}
-
-	listen(sock, this->cfg.getMaxConnections());
-	c = sizeof(cli_addr);
-
 	printf("Testing connection\n");
 	std::string test = this->rpc->execute();
 
@@ -82,102 +44,39 @@ void Server::start()
 		printf("Tests complete\n\n");
 	}
 
-	printf("Able to start accepting connections\n");
-	signal(SIGCHLD, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
+	struct mg_mgr mgr;
+	struct mg_connection *c;
 
-	int count = 0;
+	mg_mgr_init(&mgr, NULL);
+	c = mg_bind(&mgr, std::to_string(this->cfg.getPort()).c_str(), ev_handler, (void *)this->rpc);
+	mg_set_protocol_http_websocket(c);
+
+	this->running = true;
+
 	while (this->running)
 	{
-		newSock = accept(sock, (struct sockaddr *)&cli_addr, &c);
-		printf("\nNew request!\n");
-
-		if (newSock < 0)
-		{
-			perror("ERROR accepting connection");
-			exit(1);
-		}
-
-		std::thread t(handleConnection, newSock, *(this->rpc));
-		t.detach();
-		printf("Number of requests served: %d\n", ++count);
+		mg_mgr_poll(&mgr, 1000);
 	}
+
+	mg_mgr_free(&mgr);
 }
 
-std::string createHeader(std::string data)
+static void ev_handler(struct mg_connection *nc, int ev, void *p, void *r)
 {
-	std::string header;
-	header += "POST / HTTP/1.1\r\n";
-	header += "Host: 127.0.0.1\r\n";
-	header += "Connection: close\r\n";
-	header += "Content-Length: " + std::to_string(data.length()) + "\r\n\n";
-
-	return header;
-}
-
-void handleConnection(const int sock, RPCConnection rpc)
-{
-	char buffer[1024] = {0};
-	int valread = read(sock, buffer, 1024);
-
-	printf("\n%s\n", buffer);
-
-	std::string data = parseHTTPRequest(buffer);
-
-	std::string sendString = rpc.execute(data);
-
-	bool socksend = true;
-
-	if (socksend)
+	if (ev == MG_EV_HTTP_REQUEST)
 	{
-		std::string tmp = createHeader(sendString) + sendString;
-		int s = send(sock, tmp.c_str(), tmp.length(), 0);
+		printf("Request recieved\n");
+
+		RPCConnection *rpc = (RPCConnection *)r;
+		struct http_message *message = (struct http_message *)p;
+
+		std::string data(message->body.p, message->body.len);
+		std::string msg(message->message.p, message->message.len);
+
+		std::string sendString = rpc->execute(data);
+
+		mg_send_head(nc, 200, sendString.length(), nullptr);
+		mg_printf(nc, "%s", sendString.c_str());
+		mg_send_http_chunk(nc, "", 0);
 	}
-	else
-	{
-		socklen_t len;
-		struct sockaddr_storage addr;
-		char ipstr[INET6_ADDRSTRLEN];
-		int port;
-
-		len = sizeof addr;
-		getpeername(sock, (struct sockaddr *)&addr, &len);
-
-		// deal with both IPv4 and IPv6:
-		if (addr.ss_family == AF_INET)
-		{
-			struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-			port = ntohs(s->sin_port);
-			inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
-		}
-		else // AF_INET6
-		{
-			struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
-			port = ntohs(s->sin6_port);
-			inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
-		}
-
-		std::string *ip = new std::string(ipstr, 0, strlen(ipstr));
-		std::string url = *ip + ":" + std::to_string(port);
-		rpc.sendBack(url, sendString);
-	}
-
-	printf("\nMessage sent!\n");
-	printf("\n%s\n", sendString.c_str());
-
-	close(sock);
-}
-
-std::string parseHTTPRequest(const char buffer[1024])
-{
-	std::string b(buffer, 0, strlen(buffer));
-
-	int pos = b.find("{\"");
-
-	if (pos != std::string::npos)
-	{
-		return b.substr(pos);
-	}
-
-	return "";
 }
