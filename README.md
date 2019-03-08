@@ -1,6 +1,6 @@
 # Lightning Rod
 
-Onboarding lighning users :zap:
+Onboarding lightning users :zap:
 
 Lightning Rod is meant to allow users to use the Lightning Network without needing to run a full node.
 Lightning Rod's aim is to have users be able to connect their lightning daemon to Bitcoin full nodes.
