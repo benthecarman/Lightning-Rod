@@ -1,101 +1,29 @@
 #include <string>
 #include <fstream>
-
+#include <boost/filesystem.hpp>
 #include <sys/socket.h>
 
 #include "config.h"
+#include "logger.h"
 
-void parseArgs(Config *, const int, char **);
-void parseConfig(Config *);
-void parseConfigLine(Config *cfg, const std::string &line, const bool isArg);
+Config config;
 
-Config::Config(bool daemon = DEFAULT_DAEMON,
-               bool debug = DEFAULT_DEBUG,
-               int port = DEFAULT_PORT,
-               int maxConnections = DEFAULT_MAX_CONNECTIONS,
-               std::string host = DEFAULT_HOST,
-               std::string rpcAuth = DEFAULT_RPC_AUTH,
-               std::string configdir = DEFAULT_CONFIG_DIR) : daemon(daemon),
-                                                             debug(debug),
-                                                             port(port),
-                                                             maxConnections(maxConnections),
-                                                             host(host),
-                                                             rpcAuth(rpcAuth),
-                                                             configdir(configdir)
+void parseArgs(const int, char **);
+void parseConfig();
+void parseConfigLine(const std::string &, const bool);
+
+Config::Config()
 {
+    this->daemon = DEFAULT_DAEMON;
+    this->debug = DEFAULT_DEBUG;
+    this->port = DEFAULT_PORT;
+    this->host = DEFAULT_HOST;
+    this->rpcAuth = DEFAULT_RPC_AUTH;
+    boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_CONFIG_DIR);
+    this->configdir =  path.string();
+    this->logdir = DEFAULT_LOG_DIR;
 }
 
-bool Config::isDaemon()
-{
-    return this->daemon;
-}
-
-void Config::setIsDaemon(const bool d)
-{
-    this->daemon = d;
-}
-
-bool Config::isDebug()
-{
-    return this->debug;
-}
-
-void Config::setDebug(const bool db)
-{
-    this->debug = db;
-}
-
-int Config::getPort()
-{
-    return this->port;
-}
-
-void Config::setPort(const int p)
-{
-    this->port = p;
-}
-
-int Config::getMaxConnections()
-{
-    return this->maxConnections;
-}
-
-void Config::setMaxConnections(const int mc)
-{
-    this->maxConnections = mc;
-}
-
-std::string Config::getHost()
-{
-    return this->host;
-}
-
-void Config::setHost(std::string const &h)
-{
-    this->host = h;
-}
-
-std::string Config::getRPCAuth()
-{
-    return this->rpcAuth;
-}
-
-void Config::setRPCAuth(std::string const &auth)
-{
-    this->rpcAuth = auth;
-}
-
-std::string Config::getConfigDir()
-{
-    return this->configdir;
-}
-
-void Config::setConfigDir(std::string const &dir)
-{
-    this->configdir = dir;
-}
-
-// For debugging
 std::string Config::toString()
 {
     std::string str;
@@ -104,17 +32,14 @@ std::string Config::toString()
     str += "daemon: " + std::to_string(this->daemon) + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
-    str += "maxconnections: " + std::to_string(this->maxConnections) + "\n";
     str += "rpcauth: " + this->rpcAuth + "\n";
     str += "configdir: " + this->configdir + "\n";
 
     return str;
 }
 
-Config createConfig(const int argv, char *argc[])
+void createConfig(const int argv, char *argc[])
 {
-    Config *cfg = new Config();
-
     int i;
     for (i = 1; i < argv; ++i)
     {
@@ -122,52 +47,51 @@ Config createConfig(const int argv, char *argc[])
 
         if (tmp.find("--configdir=") == 0)
         {
-            cfg->setConfigDir(tmp.substr(12));
+            config.setConfigDir(tmp.substr(12));
         }
     }
 
-    parseConfig(cfg);
-    parseArgs(cfg, argv, argc);
+    parseConfig();
+    parseArgs(argv, argc);
 
-    if (cfg->isDebug())
-        printf("Current Config:\n\n%s\n", cfg->toString().c_str());
+    initLogger();
 
-    return *cfg;
+    logDebug("Current Config:\n\n" + config.toString());
 }
 
-void parseArgs(Config *cfg, const int argv, char *argc[])
+void parseArgs(const int argv, char *argc[])
 {
     int i;
     for (i = 1; i < argv; ++i)
     {
         std::string tmp(argc[i]);
 
-        parseConfigLine(cfg, tmp, true);
+        parseConfigLine(tmp, true);
     }
 }
 
-void parseConfig(Config *cfg)
+void parseConfig()
 {
     std::string tmp;
-    std::ifstream configFile(cfg->getConfigDir());
+    std::ifstream configFile(config.getConfigDir());
     if (configFile.is_open())
     {
         while (getline(configFile, tmp))
         {
-            parseConfigLine(cfg, tmp, false);
+            parseConfigLine(tmp, false);
         }
         configFile.close();
     }
     else
     {
         //TODO: Create sample config
-        printf("No config file found, using defaults.\n");
+        logDebug("No config file found, using defaults.");
     }
 }
 
-void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
+void parseConfigLine(const std::string &line, const bool isArg)
 {
-    if (line.find("#") == 0 || line.find(";") == 0) // Is a comment
+    if (line.find("#") == 0 || line.find(";") == 0 || line.length() <= 1) // Is a comment
         return;
 
     std::string tmp = isArg ? line : "--" + line; //Make it easier to pasrse
@@ -193,47 +117,16 @@ void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
         }
         catch (std::invalid_argument ignored)
         {
-            printf("Invalid port number (%s), must be between 1024 and 65535\n", d.c_str());
+            logError("Invalid port number (" + d + "), must be between 1024 and 65535");
             exit(1);
         }
         if (x <= 1024 || x > 65535)
         {
-            printf("Invalid port number (%d), must be between 1024 and 65535\n", x);
+            logError("Invalid port number (" + std::to_string(x) + "), must be between 1024 and 65535");
             exit(1);
         }
         else
-            cfg->setPort(x);
-    }
-    else if (tmp.find("--maxconnections=") == 0 || tmp.find("--maxconnections =") == 0)
-    {
-        int sub = 17;
-        if (tmp.find("--maxconnections = ") == 0)
-            sub = 19;
-        else if (tmp.find("--maxconnections =") == 0)
-            sub = 18;
-
-        std::string d = tmp.substr(sub);
-        int x = -1;
-        try
-        {
-            x = std::stoi(d);
-        }
-        catch (std::invalid_argument ignored)
-        {
-            printf("Invalid max connections (%s), must be greater than 1 (0 for unlimited).\n", d.c_str());
-            exit(1);
-        }
-        if (x < 0)
-        {
-            printf("Invalid max connections (%d), must be greater than 1 (0 for unlimited).\n", x);
-            exit(1);
-        }
-        else if (x == 0)
-        {
-            cfg->setMaxConnections(SOMAXCONN);
-        }
-        else
-            cfg->setMaxConnections(x);
+            config.setPort(x);
     }
     else if (tmp.find("--host=") == 0 || tmp.find("--host =") == 0)
     {
@@ -243,7 +136,7 @@ void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
         else if (tmp.find("--host =") == 0 || tmp.find("--host= ") == 0)
             sub = 8;
 
-        cfg->setHost(tmp.substr(sub));
+        config.setHost(tmp.substr(sub));
     }
     else if (tmp.find("--rpcauth=") == 0 || tmp.find("--rpcauth =") == 0)
     {
@@ -253,7 +146,7 @@ void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
         else if (tmp.find("--rpcauth =") == 0 || tmp.find("--rpcauth= ") == 0)
             sub = 11;
 
-        cfg->setRPCAuth(tmp.substr(sub));
+        config.setRPCAuth(tmp.substr(sub));
     }
     else if (!isArg && (tmp.find("--daemon=") == 0 || tmp.find("--daemon =") == 0))
     {
@@ -273,18 +166,18 @@ void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
         {
         }
         if (x == 1 || d.compare("true") == 0)
-            cfg->setIsDaemon(true);
+            config.setIsDaemon(true);
         else if (x == 0 || d.compare("false") == 0)
-            cfg->setIsDaemon(false);
+            config.setIsDaemon(false);
         else
         {
-            printf("Unable to proccess daemon config option\n");
+            logError("Unable to proccess daemon config option");
             exit(1);
         }
     }
     else if (isArg && (tmp.compare("--daemon") == 0 || tmp.compare("-d") == 0))
     {
-        cfg->setIsDaemon(true);
+        config.setIsDaemon(true);
     }
     else if (!isArg && (tmp.find("--debug=") == 0 || tmp.find("--debug =") == 0))
     {
@@ -304,21 +197,22 @@ void parseConfigLine(Config *cfg, const std::string &line, const bool isArg)
         {
         }
         if (x == 1 || d.compare("true") == 0)
-            cfg->setDebug(true);
+            config.setDebug(true);
         else if (x == 0 || d.compare("false") == 0)
-            cfg->setDebug(false);
+            config.setDebug(false);
         else
         {
-            printf("Unable to proccess debug config option\n");
+            logError("Unable to proccess debug config option");
             exit(1);
         }
     }
     else if (isArg && (tmp.compare("--debug") == 0 || tmp.compare("-db") == 0))
     {
-        cfg->setDebug(true);
+        config.setDebug(true);
     }
     else
     {
-        printf("Unable to proccess config option %s\n", tmp.c_str());
+        logError("Unable to proccess config option " + line);
+        exit(1);
     }
 }

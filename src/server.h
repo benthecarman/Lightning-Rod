@@ -7,12 +7,11 @@
 class Server
 {
 private:
-  Config cfg;
   RPCConnection *rpc;
   bool running = false;
 
 public:
-  Server(Config);
+  Server();
   void start();
   bool isRunning();
 };
