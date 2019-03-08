@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "rpcconnection.h"
+#include "logger.h"
 
 RPCConnection::RPCConnection(const std::string url, const std::string userpwd) : url(url),
                                                                                  userpwd(userpwd)
@@ -51,8 +52,7 @@ std::string RPCConnection::execute(const std::string data)
     CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     if (res != 0)
     {
-        printf("Failed global init ...\n");
-        exit(1);
+        logWarning("Failed curl init, request failed \n");
     }
 
     CURL *curl = curl_easy_init();
@@ -89,43 +89,6 @@ std::string RPCConnection::execute(const std::string data)
     return s;
 }
 
-void RPCConnection::sendBack(const std::string url, const std::string data)
-{
-    CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
-    if (res != 0)
-    {
-        printf("Failed global init ...\n");
-        exit(1);
-    }
-
-    CURL *curl = curl_easy_init();
-    struct curl_slist *headers = NULL;
-
-    if (curl)
-    {
-        headers = curl_slist_append(headers, "Connection: close");
-        headers = curl_slist_append(headers, "Accept:");
-        headers = curl_slist_append(headers, "Content-Type:");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)data.length());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_USERPWD, this->userpwd.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY);
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);
-
-        curl_easy_perform(curl);
-    }
-
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-}
-
-// Used for testing
 std::string RPCConnection::execute()
 {
     std::string data = "{\"method\":\"echo\",\"params\":[],\"id\":\"test\"}";
