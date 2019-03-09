@@ -52,7 +52,9 @@ std::string RPCConnection::execute(const std::string data)
     CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     if (res != 0)
     {
-        logWarning("Failed curl init, request failed \n");
+#ifdef LOGGER_ENABLED
+        logWarning("Failed curl init, request failed");
+#endif
     }
 
     CURL *curl = curl_easy_init();

@@ -1,7 +1,6 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-
 void initLogger();
 void logTrace(std::string lg);
 void logDebug(std::string lg);
