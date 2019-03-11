@@ -2,10 +2,6 @@
 
 * Authentication
 
-* Permissions:
-  * RPC Calls
-  * IP addresses
-
 * User Guide
   * Sparks (User)
   * Rods (Server)

@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -21,6 +22,7 @@ Config::Config()
     boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_CONFIG_DIR);
     this->configdir = path.string();
     this->logdir = DEFAULT_LOG_DIR;
+    this->cmdWhiteList = DEFAULT_CMD_WHITE_LIST;
 }
 
 std::string Config::toString()
@@ -150,6 +152,36 @@ void parseConfigLine(const std::string &line, const bool isArg)
             sub = 11;
 
         config.setRPCAuth(tmp.substr(sub));
+    }
+    else if (tmp.find("--whitelistcmd=") == 0 || tmp.find("--whitelistcmd =") == 0)
+    {
+        int sub = 15;
+        if (tmp.find("--whitelistcmd = ") == 0)
+            sub = 17;
+        else if (tmp.find("--whitelistcmd =") == 0 || tmp.find("--whitelistcmd= ") == 0)
+            sub = 16;
+
+        config.whitelistCommand(tmp.substr(sub));
+    }
+    else if (tmp.find("--blacklistcmd=") == 0 || tmp.find("--blacklistcmd =") == 0)
+    {
+        int sub = 15;
+        if (tmp.find("--blacklistcmd = ") == 0)
+            sub = 17;
+        else if (tmp.find("--blacklistcmd =") == 0 || tmp.find("--blacklistcmd= ") == 0)
+            sub = 16;
+
+        config.blacklistCommand(tmp.substr(sub));
+    }
+    else if (tmp.find("--blacklistip=") == 0 || tmp.find("--blacklistip =") == 0)
+    {
+        int sub = 14;
+        if (tmp.find("--blacklistip = ") == 0)
+            sub = 16;
+        else if (tmp.find("--blacklistip =") == 0 || tmp.find("--blacklistip= ") == 0)
+            sub = 15;
+
+        config.blacklistIP(tmp.substr(sub));
     }
     else if (!isArg && (tmp.find("--daemon=") == 0 || tmp.find("--daemon =") == 0))
     {
