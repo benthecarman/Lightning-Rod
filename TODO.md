@@ -1,5 +1,9 @@
 # Todo
 
+* ZMQ Integration
+
+* Windows & Mac build
+
 * Authentication
 
 * User Guide
