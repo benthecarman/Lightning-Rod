@@ -120,13 +120,16 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 	}
 	bool blacklisted = false;
 	std::string blackListedcmd;
-	for (auto const &cmd : config.getCommandBlackList())
+	if (whitelisted)
 	{
-		if (data.find("\"method\":\"" + cmd + "\"") != std::string::npos)
+		for (auto const &cmd : config.getCommandBlackList())
 		{
-			blackListedcmd = cmd;
-			blacklisted = true;
-			break;
+			if (data.find("\"method\":\"" + cmd + "\"") != std::string::npos)
+			{
+				blackListedcmd = cmd;
+				blacklisted = true;
+				break;
+			}
 		}
 	}
 
