@@ -1,5 +1,5 @@
-#ifndef Config_h
-#define Config_h
+#ifndef Config_H
+#define Config_H
 
 #include <algorithm>
 

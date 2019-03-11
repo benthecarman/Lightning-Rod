@@ -12,7 +12,18 @@ private:
 public:
   Server();
   void start();
-  bool isRunning();
+  bool isRunning()
+  {
+    return this->running;
+  }
+  void setRunning(const bool r)
+  {
+    this->running = r;
+  }
+  RPCConnection *getRPC()
+  {
+    return this->rpc;
+  }
 };
 
 void handleConnection(const int sock, RPCConnection rpc);

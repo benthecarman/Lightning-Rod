@@ -28,20 +28,20 @@ void initLogger()
 void logTrace(std::string lg)
 {
     if (config.isDebug())
-        printf("[Trace]\t%s\n", lg.c_str());
+        printf("[Trace]\t\t%s\n", lg.c_str());
     BOOST_LOG_TRIVIAL(trace) << lg;
 }
 
 void logDebug(std::string lg)
 {
     if (config.isDebug())
-        printf("[Debug]\t%s\n", lg.c_str());
+        printf("[Debug]\t\t%s\n", lg.c_str());
     BOOST_LOG_TRIVIAL(debug) << lg;
 }
 
 void logInfo(std::string lg)
 {
-    printf("[Info]\t%s\n", lg.c_str());
+    printf("[Info]\t\t%s\n", lg.c_str());
     BOOST_LOG_TRIVIAL(info) << lg;
 }
 
@@ -53,12 +53,12 @@ void logWarning(std::string lg)
 
 void logError(std::string lg)
 {
-    printf("[Error]\t%s\n", lg.c_str());
+    printf("[Error]\t\t%s\n", lg.c_str());
     BOOST_LOG_TRIVIAL(error) << lg;
 }
 
 void logFatal(std::string lg)
 {
-    printf("[Fatal]\t%s\n", lg.c_str());
+    printf("[Fatal]\t\t%s\n", lg.c_str());
     BOOST_LOG_TRIVIAL(fatal) << lg;
 }

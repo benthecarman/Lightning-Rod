@@ -4,7 +4,7 @@ ENDFLAGS=-lcurl -lboost_filesystem -lboost_system -lboost_log -lboost_thread
 
 default: rod.o
 
-rod.o: src/rod.cpp src/config.cpp src/rpcconnection.cpp src/server.cpp depends/mongoose.c src/logger.cpp
+rod.o: src/rod.cpp src/config.cpp src/rpcconnection.cpp src/server.cpp src/logger.cpp depends/mongoose.c src/config.h src/rpcconnection.h src/server.h src/logger.h depends/mongoose.h
 	$(CC) $(CFLAGS) src/rod.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp depends/mongoose.c src/logger.cpp -o rod.o -I depends $(ENDFLAGS)
 
 test: test.cpp
