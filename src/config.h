@@ -1,6 +1,8 @@
 #ifndef Config_h
 #define Config_h
 
+#include <algorithm>
+
 static const bool DEFAULT_DAEMON = false;
 static const bool DEFAULT_DEBUG = false;
 static const int DEFAULT_PORT = 8331;
@@ -8,6 +10,16 @@ static const std::string DEFAULT_HOST = "http://127.0.0.1:8332/";
 static const std::string DEFAULT_RPC_AUTH = "user:pass";
 static const std::string DEFAULT_CONFIG_DIR = "/.lightning-rod/conf.cfg";
 static const std::string DEFAULT_LOG_DIR = "/.lightning-rod/logs/";
+
+static const std::vector<std::string> DEFAULT_CMD_WHITE_LIST = {
+    "echo",
+    "getblockhash",
+    "getblock",
+    "estimatesmartfee",
+    "getbestblockhash",
+    "sendrawtransaction",
+    "getblockcount",
+    "gettxout"};
 
 class Config
 {
@@ -18,6 +30,9 @@ class Config
   std::string rpcAuth;
   std::string configdir;
   std::string logdir;
+  std::vector<std::string> cmdWhiteList;
+  std::vector<std::string> cmdBlackList;
+  std::vector<std::string> ipBlackList;
 
 public:
   Config();
@@ -78,6 +93,34 @@ public:
   {
     this->logdir = dir;
   }
+  std::vector<std::string> getCommandWhiteList()
+  {
+    return this->cmdWhiteList;
+  }
+  void whitelistCommand(const std::string cmd)
+  {
+    if (std::find(this->cmdWhiteList.begin(), this->cmdWhiteList.end(), cmd) == this->cmdWhiteList.end())
+      this->cmdWhiteList.push_back(cmd);
+  }
+  std::vector<std::string> getCommandBlackList()
+  {
+    return this->cmdBlackList;
+  }
+  void blacklistCommand(const std::string cmd)
+  {
+    if (std::find(this->cmdBlackList.begin(), this->cmdBlackList.end(), cmd) == this->cmdBlackList.end())
+      this->cmdBlackList.push_back(cmd);
+  }
+  std::vector<std::string> getIPBlackList()
+  {
+    return this->ipBlackList;
+  }
+  void blacklistIP(const std::string ip)
+  {
+    if (std::find(this->ipBlackList.begin(), this->ipBlackList.end(), ip) == this->ipBlackList.end())
+      this->ipBlackList.push_back(ip);
+  }
+
   std::string toString();
 };
 
