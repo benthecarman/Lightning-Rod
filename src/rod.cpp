@@ -4,10 +4,7 @@
 
 #include <unistd.h>
 
-#include <boost/log/sources/global_logger_storage.hpp>
-
 #include "server.h"
-#include "logger.h"
 #include "config.h"
 
 int main(int argc, char *argv[])
@@ -31,6 +28,6 @@ int main(int argc, char *argv[])
 	{
 		s->start();
 	}
-	
+
 	return 0;
 }

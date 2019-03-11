@@ -100,7 +100,6 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 		struct http_message *message = (struct http_message *)p;
 
 		std::string data(message->body.p, message->body.len);
-		std::string msg(message->message.p, message->message.len);
 
 		std::string sendString = rpc->execute(data);
 

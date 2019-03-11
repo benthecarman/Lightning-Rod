@@ -1,7 +1,6 @@
 #include <string>
 #include <fstream>
 #include <boost/filesystem.hpp>
-#include <sys/socket.h>
 
 #include "config.h"
 #include "logger.h"
@@ -20,7 +19,7 @@ Config::Config()
     this->host = DEFAULT_HOST;
     this->rpcAuth = DEFAULT_RPC_AUTH;
     boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_CONFIG_DIR);
-    this->configdir =  path.string();
+    this->configdir = path.string();
     this->logdir = DEFAULT_LOG_DIR;
 }
 
@@ -82,10 +81,14 @@ void parseConfig()
         }
         configFile.close();
     }
+    else if (config.getConfigDir().find(DEFAULT_CONFIG_DIR) != std::string::npos)
+    {
+        logDebug("No config file found, using defaults.");
+    }
     else
     {
         //TODO: Create sample config
-        logDebug("No config file found, using defaults.");
+        //logDebug("Created sample config file");
     }
 }
 
@@ -94,7 +97,7 @@ void parseConfigLine(const std::string &line, const bool isArg)
     if (line.find("#") == 0 || line.find(";") == 0 || line.length() <= 1) // Is a comment
         return;
 
-    std::string tmp = isArg ? line : "--" + line; //Make it easier to pasrse
+    std::string tmp = isArg ? line : "--" + line; //Make it easier to parse
 
     if (tmp.find("#") > 0) //Remove comment at end of line
         tmp = tmp.substr(0, tmp.find("#"));

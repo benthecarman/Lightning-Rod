@@ -2,7 +2,6 @@
 #define SERVER_H
 
 #include "rpcconnection.h"
-#include "config.h"
 
 class Server
 {
