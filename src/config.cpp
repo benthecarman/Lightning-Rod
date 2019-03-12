@@ -82,8 +82,6 @@ void createConfig(const int argv, char *argc[])
     {
         logFatal("Config option: port cannot be the same as zmqblockport");
     }
-
-    logDebug("Current Config:\n\n" + config.toString());
 }
 
 void parseArgs(const int argv, char *argc[])

@@ -51,9 +51,9 @@ void Server::start()
 		mg_mgr_poll(&mgr, 1000);
 	}
 
-	logInfo("Shutting down");
-
 	mg_mgr_free(&mgr);
+
+	logInfo("RPC Server shutdown");
 }
 
 static std::string getPeerIP(const sock_t &sock)

@@ -49,4 +49,8 @@ void ZMQServer::start()
         pubSocket.send(env1, ZMQ_SNDMORE);
         pubSocket.send(msg1);
     }
+
+    subSocket.close();
+
+    logInfo(topic + " ZMQ Server shutdown");
 }

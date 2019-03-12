@@ -2,30 +2,59 @@
 #include <vector>
 #include <thread>
 #include <cstring>
+#include <cstdlib>
 
 #include <unistd.h>
+#include <signal.h>
 
 #include "server.h"
 #include "logger.h"
 #include "zmqserver.h"
 #include "config.h"
 
+Server *serverRPC;
+ZMQServer *blockZMQServer;
+ZMQServer *txZMQServer;
+
+void sigHandler(int s)
+{
+	printf("\n");
+
+	switch (s)
+	{
+	// This could have wrong signals
+	case SIGABRT:
+	case SIGINT:
+	case SIGKILL:
+	case SIGSTOP:
+	case SIGQUIT:
+	case SIGTERM:
+		serverRPC->setRunning(false);
+		blockZMQServer->setRunning(false);
+		txZMQServer->setRunning(false);
+		sleep(3);
+		exit(1);
+	default:
+		printf("Caught signal %d\n", s);
+	}
+}
+
 void rpcServer()
 {
-	Server *s = new Server();
-	s->start();
+	serverRPC = new Server();
+	serverRPC->start();
 }
 
 void rawBlockZMQServer()
 {
-	ZMQServer *zmq = new ZMQServer("rawblock", config.getZMQBlockHost(), config.getZMQBlockPort());
-	zmq->start();
+	blockZMQServer = new ZMQServer("rawblock", config.getZMQBlockHost(), config.getZMQBlockPort());
+	blockZMQServer->start();
 }
 
 void rawTxZMQServer()
 {
-	ZMQServer *zmq = new ZMQServer("rawtx", config.getZMQTxHost(), config.getZMQTxPort());
-	zmq->start();
+	txZMQServer = new ZMQServer("rawtx", config.getZMQTxHost(), config.getZMQTxPort());
+	txZMQServer->start();
 }
 
 int main(int argc, char *argv[])
@@ -37,40 +66,41 @@ int main(int argc, char *argv[])
 	}
 
 	createConfig(argc, argv);
-    initLogger();
+	initLogger();
 
-	if (config.isDaemon())
+	logDebug("Current Config:\n\n" + config.toString());
+
+	struct sigaction sigIntHandler;
+
+	sigIntHandler.sa_handler = sigHandler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+
+	sigaction(SIGINT, &sigIntHandler, NULL);
+
+	std::thread rpcThread(rpcServer);
+	rpcThread.detach();
+
+	if (config.getZMQEnabled())
 	{
-		if (fork() == 0)
+		if (config.isTxZMQValid())
 		{
+			std::thread zmqTxThread(rawTxZMQServer);
+			zmqTxThread.detach();
+		}
+		if (config.isBlockZMQValid())
+		{
+			std::thread zmqBlockThread(rawBlockZMQServer);
+			zmqBlockThread.detach();
+		}
+		else if (!config.isTxZMQValid())
+		{
+			logError("ZMQ Enabled but ZMQ Ports and Hosts are not configured correctly");
 		}
 	}
-	else
-	{
-		std::thread rpcThread(rpcServer);
-		rpcThread.detach();
 
-		if (config.getZMQEnabled())
-		{
-			if (config.isTxZMQValid())
-			{
-				std::thread zmqTxThread(rawTxZMQServer);
-				zmqTxThread.detach();
-			}
-			if (config.isBlockZMQValid())
-			{
-				std::thread zmqBlockThread(rawBlockZMQServer);
-				zmqBlockThread.detach();
-			}
-			else if (!config.isTxZMQValid())
-			{
-				logError("ZMQ Enabled but ZMQ Ports and Hosts are not configured correctly");
-			}
-		}
-
-		while (true)
-			;
-	}
+	while (true)
+		;
 
 	return 0;
 }

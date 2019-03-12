@@ -2,8 +2,6 @@
 
 * Windows & Mac build
 
-* Safe shutdown
-
 * Authentication
 
 * User Guide
