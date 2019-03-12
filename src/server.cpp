@@ -33,7 +33,7 @@ void Server::start()
 	}
 	else
 	{
-		logInfo("Tests complete");
+		logDebug("RPC Tests complete");
 	}
 
 	struct mg_mgr mgr;
