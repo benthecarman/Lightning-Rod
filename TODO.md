@@ -1,7 +1,5 @@
 # Todo
 
-* ZMQ Integration
-
 * Windows & Mac build
 
 * Safe shutdown
