@@ -16,8 +16,13 @@ Config::Config()
 {
     this->daemon = DEFAULT_DAEMON;
     this->debug = DEFAULT_DEBUG;
+    this->zmqEnabled = DEFAULT_ZMQ_ENABLED;
     this->port = DEFAULT_PORT;
+    this->zmqBlockPort = DEFAULT_ZMQ_BLOCK_PORT;
+    this->zmqTxPort = DEFAULT_ZMQ_TX_PORT;
     this->host = DEFAULT_HOST;
+    this->zmqBlockHost = DEFAULT_ZMQ_BLOCK_HOST;
+    this->zmqTxHost = DEFAULT_ZMQ_TX_HOST;
     this->rpcAuth = DEFAULT_RPC_AUTH;
     boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_CONFIG_DIR);
     this->configdir = path.string();
@@ -31,10 +36,20 @@ std::string Config::toString()
 
     str += "Debug mode: " + std::to_string(this->debug) + "\n";
     str += "daemon: " + std::to_string(this->daemon) + "\n";
+    str += "zmqEnabled: " + std::to_string(this->zmqEnabled) + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
     str += "rpcauth: " + this->rpcAuth + "\n";
     str += "configdir: " + this->configdir + "\n";
+
+    if (this->zmqEnabled)
+    {
+        str += "\n";
+        str += "zmqBlockPort: " + std::to_string(this->zmqBlockPort) + "\n";
+        str += "zmqBlockHost: " + this->zmqBlockHost + "\n";
+        str += "zmqTxPort: " + std::to_string(this->zmqTxPort) + "\n";
+        str += "zmqTxHost: " + this->zmqTxHost + "\n";
+    }
 
     return str;
 }
@@ -55,7 +70,18 @@ void createConfig(const int argv, char *argc[])
     parseConfig();
     parseArgs(argv, argc);
 
-    initLogger();
+    if (config.getZMQBlockPort() == config.getZMQTxPort())
+    {
+        logFatal("Config option: zmqblockport cannot be the same as zmqtxport");
+    }
+    if (config.getPort() == config.getZMQTxPort())
+    {
+        logFatal("Config option: port cannot be the same as zmqtxport");
+    }
+    if (config.getPort() == config.getZMQBlockPort())
+    {
+        logFatal("Config option: port cannot be the same as zmqblockport");
+    }
 
     logDebug("Current Config:\n\n" + config.toString());
 }
@@ -133,6 +159,60 @@ void parseConfigLine(const std::string &line, const bool isArg)
         else
             config.setPort(x);
     }
+    else if (tmp.find("--zmqblockport=") == 0 || tmp.find("--zmqblockport =") == 0)
+    {
+        int sub = 15;
+        if (tmp.find("--zmqblockport = ") == 0)
+            sub = 17;
+        else if (tmp.find("--zmqblockport =") == 0)
+            sub = 16;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+            logError("Invalid zmqblockport number (" + d + "), must be between 1024 and 65535");
+            exit(1);
+        }
+        if (x <= 1024 || x > 65535)
+        {
+            logError("Invalid zmqblockport number (" + std::to_string(x) + "), must be between 1024 and 65535");
+            exit(1);
+        }
+        else
+            config.setZMQBlockPort(x);
+    }
+    else if (tmp.find("--zmqtxport=") == 0 || tmp.find("--zmqtxport =") == 0)
+    {
+        int sub = 12;
+        if (tmp.find("--zmqtxport = ") == 0)
+            sub = 14;
+        else if (tmp.find("--zmqtxport =") == 0)
+            sub = 13;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+            logError("Invalid zmqtxport number (" + d + "), must be between 1024 and 65535");
+            exit(1);
+        }
+        if (x <= 1024 || x > 65535)
+        {
+            logError("Invalid zmqtxport number (" + std::to_string(x) + "), must be between 1024 and 65535");
+            exit(1);
+        }
+        else
+            config.setZMQTxPort(x);
+    }
     else if (tmp.find("--host=") == 0 || tmp.find("--host =") == 0)
     {
         int sub = 7;
@@ -142,6 +222,26 @@ void parseConfigLine(const std::string &line, const bool isArg)
             sub = 8;
 
         config.setHost(tmp.substr(sub));
+    }
+    else if (tmp.find("--zmqblockhost=") == 0 || tmp.find("--zmqblockhost =") == 0)
+    {
+        int sub = 15;
+        if (tmp.find("--zmqblockhost = ") == 0)
+            sub = 17;
+        else if (tmp.find("--zmqblockhost =") == 0 || tmp.find("--zmqblockhost= ") == 0)
+            sub = 16;
+
+        config.setZMQBlockHost(tmp.substr(sub));
+    }
+    else if (tmp.find("--zmqtxhost=") == 0 || tmp.find("--zmqtxhost =") == 0)
+    {
+        int sub = 12;
+        if (tmp.find("--zmqtxhost = ") == 0)
+            sub = 14;
+        else if (tmp.find("--zmqtxhost =") == 0 || tmp.find("--zmqtxhost= ") == 0)
+            sub = 13;
+
+        config.setZMQTxHost(tmp.substr(sub));
     }
     else if (tmp.find("--rpcauth=") == 0 || tmp.find("--rpcauth =") == 0)
     {
@@ -244,6 +344,33 @@ void parseConfigLine(const std::string &line, const bool isArg)
     else if (isArg && (tmp.compare("--debug") == 0 || tmp.compare("-db") == 0))
     {
         config.setDebug(true);
+    }
+    else if (tmp.find("--zmqenabled=") == 0 || tmp.find("--zmqenabled =") == 0)
+    {
+        int sub = 13;
+        if (tmp.find("--zmqenabled = ") == 0)
+            sub = 15;
+        else if (tmp.find("--zmqenabled =") == 0 || tmp.find("--zmqenabled= ") == 0)
+            sub = 14;
+
+        std::string d = tmp.substr(sub);
+        int x = -1;
+        try
+        {
+            x = std::stoi(d);
+        }
+        catch (std::invalid_argument ignored)
+        {
+        }
+        if (x == 1 || d.compare("true") == 0)
+            config.setZMQEnabled(true);
+        else if (x == 0 || d.compare("false") == 0)
+            config.setZMQEnabled(false);
+        else
+        {
+            logError("Unable to proccess debug config option");
+            exit(1);
+        }
     }
     else
     {
