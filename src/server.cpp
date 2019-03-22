@@ -44,6 +44,7 @@ void Server::start()
 	mg_set_protocol_http_websocket(c);
 
 	this->running = true;
+	this->stopped = false;
 
 	logInfo("Lightning Rod ready to accept connections!");
 	while (this->running)
@@ -54,6 +55,8 @@ void Server::start()
 	mg_mgr_free(&mgr);
 
 	logInfo("RPC Server shutdown");
+
+	this->stopped = true;
 }
 
 static std::string getPeerIP(const sock_t &sock)

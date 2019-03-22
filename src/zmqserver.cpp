@@ -18,8 +18,6 @@ void ZMQServer::start()
         logFatal("ZMQ Server Topic not set");
     }
 
-    this->running = true;
-
     zmq::context_t pubContext(1);
     zmq::socket_t pubSocket(pubContext, ZMQ_PUB);
     std::string b = "tcp://*:" + std::to_string(this->port);
@@ -31,6 +29,9 @@ void ZMQServer::start()
     subSocket.setsockopt(ZMQ_SUBSCRIBE, this->topic.c_str(), 1);
 
     logInfo(this->topic + " ZMQ Server ready!");
+
+    this->running = true;
+    this->stopped = false;
 
     while (this->running)
     {
@@ -53,4 +54,6 @@ void ZMQServer::start()
     subSocket.close();
 
     logInfo(topic + " ZMQ Server shutdown");
+
+    this->stopped = true;
 }

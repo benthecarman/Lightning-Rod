@@ -32,6 +32,7 @@ void sigHandler(int s)
 		serverRPC->setRunning(false);
 		blockZMQServer->setRunning(false);
 		txZMQServer->setRunning(false);
+		while (!serverRPC->isStopped() && !blockZMQServer->isStopped() && !txZMQServer->isStopped());
 		sleep(3);
 		exit(1);
 	default:

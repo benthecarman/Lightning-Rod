@@ -8,6 +8,7 @@ class Server
 private:
   RPCConnection *rpc;
   bool running = false;
+  bool stopped = true;
 
 public:
   Server();
@@ -23,6 +24,14 @@ public:
   RPCConnection *getRPC()
   {
     return this->rpc;
+  }
+  bool isStopped()
+  {
+    return this->stopped;
+  }
+  void setStopped(const bool s)
+  {
+    this->stopped = s;
   }
 };
 

@@ -8,6 +8,7 @@ class ZMQServer
     std::string topic;
     int port;
     bool running = false;
+    bool stopped = true;
 
   public:
     ZMQServer(const std::string, const std::string, const int);
@@ -43,6 +44,14 @@ class ZMQServer
     void setRunning(const bool r)
     {
         this->running = r;
+    }
+    bool isStopped()
+    {
+        return this->stopped;
+    }
+    void setStopped(const bool s)
+    {
+        this->stopped = s;
     }
 };
 
