@@ -4,10 +4,6 @@
 
 * Authentication
 
-* User Guide
-  * Sparks (User)
-  * Rods (Server)
-
 * Server list
 
 * Server ping

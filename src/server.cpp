@@ -98,6 +98,7 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 	{
 		peers.push_back(peerIP);
 		logInfo("New peer!");
+		logDebug("Peer IP: " + peerIP);
 	}
 
 	RPCConnection *rpc = (RPCConnection *)r;

@@ -1,0 +1,5 @@
+alias = Im A Spark
+rgb = 009735
+network = bitcoin
+bitcoin-rpcconnect = #Lightning Rod IP
+bitcoin-rpcport = #Lightning Rod Port
