@@ -2,6 +2,8 @@
 
 * Windows & Mac build
 
+* Help command
+
 * Authentication
 
 * Server list
