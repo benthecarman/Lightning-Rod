@@ -63,11 +63,15 @@ static std::string getPeerIP(const sock_t &sock)
 {
 	socklen_t len;
 	struct sockaddr_storage addr;
-	char ipstr[INET6_ADDRSTRLEN];
+	char *ipstr;
 
 	len = sizeof addr;
 	getpeername(sock, (struct sockaddr *)&addr, &len);
 
+#ifdef _WIN32
+	struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+	ipstr = inet_ntoa(s->sin_addr);
+#else
 	if (addr.ss_family == AF_INET) // IPv4
 	{
 		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
@@ -78,7 +82,7 @@ static std::string getPeerIP(const sock_t &sock)
 		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
 		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
-
+#endif
 	std::string *ip = new std::string(ipstr, 0, strlen(ipstr));
 	return *ip;
 }

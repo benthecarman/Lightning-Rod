@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <algorithm>
+#include <vector>
 
 static const bool DEFAULT_DAEMON = false;
 static const bool DEFAULT_DEBUG = false;

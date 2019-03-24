@@ -1,5 +1,8 @@
 #include <string>
+#ifdef _WIN32
+#else
 #include <zmq.hpp>
+#endif
 
 #include "logger.h"
 #include "config.h"

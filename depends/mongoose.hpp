@@ -220,12 +220,13 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <process.h>
-
+/*
 #if _MSC_VER < 1700
 typedef int bool;
 #else
 #include <stdbool.h>
 #endif
+*/
 
 #if defined(_MSC_VER) && _MSC_VER >= 1800
 #define strdup _strdup

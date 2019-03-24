@@ -2,12 +2,18 @@
 #include <iomanip>
 #include <string>
 #include <vector>
-#include <thread>
 #include <cstring>
 #include <cstdlib>
+#include <csignal>
+#include <thread>
 
+#ifdef _WIN32
+#include <windows.h>
+#define sleep(n) Sleep(n)
+#else
 #include <unistd.h>
 #include <signal.h>
+#endif
 
 #include "server.h"
 #include "logger.h"
@@ -25,13 +31,20 @@ void sigHandler(int s)
 
 	switch (s)
 	{
-	// This could have wrong signals
+// This could have wrong signals
+#ifndef _WIN32
 	case SIGABRT:
 	case SIGINT:
 	case SIGKILL:
 	case SIGSTOP:
 	case SIGQUIT:
 	case SIGTERM:
+#else
+	case IDABORT:
+	case SIF_ALL:
+	case MCI_STOP:
+	case WM_QUIT:
+#endif
 		serverRPC->setRunning(false);
 		blockZMQServer->setRunning(false);
 		txZMQServer->setRunning(false);
@@ -86,13 +99,15 @@ int main(int argc, char *argv[])
 
 	logDebug("Current Config:\n\n" + config.toString());
 
+#ifndef _WIN32
 	struct sigaction sigIntHandler;
-
 	sigIntHandler.sa_handler = sigHandler;
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
-
 	sigaction(SIGINT, &sigIntHandler, NULL);
+#else
+	signal(WM_QUIT, sigHandler);
+#endif
 
 	std::thread rpcThread(rpcServer);
 	rpcThread.detach();

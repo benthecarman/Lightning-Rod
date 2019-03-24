@@ -1,8 +1,12 @@
 #include <stdlib.h>
+#ifdef _WIN32
+#include <curl.h>
+#else
 #include <curl/curl.h>
+#endif
 
 #include <string>
-#include <string.h>
+#include <cstring>
 
 #include "rpcconnection.h"
 #include "logger.h"
