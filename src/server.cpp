@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "mongoose.h"
+#include "mongoose.hpp"
 
 #include "rpcconnection.h"
 #include "config.h"
