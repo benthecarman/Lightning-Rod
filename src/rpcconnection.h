@@ -1,5 +1,5 @@
-#ifndef RPCConnection_H
-#define RPCConnection_H
+#ifndef RPCCONNECTION_H
+#define RPCCONNECTION_H
 
 class RPCConnection
 {
