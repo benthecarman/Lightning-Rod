@@ -1,3 +1,5 @@
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <thread>
@@ -19,7 +21,7 @@ ZMQServer *txZMQServer;
 
 void sigHandler(int s)
 {
-	printf("\n");
+	std::cout << std::endl;
 
 	switch (s)
 	{
@@ -37,7 +39,7 @@ void sigHandler(int s)
 		sleep(3);
 		exit(1);
 	default:
-		printf("Caught signal %d\n", s);
+		std::cout << "Caught signal " << s << std::endl;
 	}
 }
 
