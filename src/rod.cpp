@@ -11,6 +11,7 @@
 #include "logger.h"
 #include "zmqserver.h"
 #include "config.h"
+#include "option.h"
 
 Server *serverRPC;
 ZMQServer *blockZMQServer;
@@ -66,6 +67,8 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	registerOptions();
+
 	createConfig(argc, argv);
 	initLogger();
 
@@ -82,7 +85,7 @@ int main(int argc, char *argv[])
 	std::thread rpcThread(rpcServer);
 	rpcThread.detach();
 
-	if (config.getZMQEnabled())
+	if (!config.getDisableZMQ())
 	{
 		if (config.isTxZMQValid())
 		{
