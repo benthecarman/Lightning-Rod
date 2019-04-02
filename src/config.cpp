@@ -133,7 +133,7 @@ void processConfigLine(const std::string &line, const bool isArg)
 
     for (auto &opt : options)
     {
-        if (str.find("--" + opt.getName()) != std::string::npos)
+        if (str.find("--" + opt.getName()) == 0)
         {
             if (isArg && opt.isBool())
             {
