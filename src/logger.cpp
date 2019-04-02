@@ -5,6 +5,7 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/filesystem.hpp>
 
+#include <iostream>
 #include <stdio.h>
 
 #include "config.h"
@@ -28,37 +29,37 @@ void initLogger()
 void logTrace(std::string lg)
 {
     if (config.isDebug())
-        printf("[Trace]\t\t%s\n", lg.c_str());
+        std::cout << "[Trace]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(trace) << lg;
 }
 
 void logDebug(std::string lg)
 {
     if (config.isDebug())
-        printf("[Debug]\t\t%s\n", lg.c_str());
+        std::cout << "[Debug]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(debug) << lg;
 }
 
 void logInfo(std::string lg)
 {
-    printf("[Info]\t\t%s\n", lg.c_str());
+    std::cout << "[Info]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(info) << lg;
 }
 
 void logWarning(std::string lg)
 {
-    printf("[Warning]\t%s\n", lg.c_str());
+    std::cout << "[Warning]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(warning) << lg;
 }
 
 void logError(std::string lg)
 {
-    printf("[Error]\t\t%s\n", lg.c_str());
+    std::cout << "[Error]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(error) << lg;
 }
 
 void logFatal(std::string lg)
 {
-    printf("[Fatal]\t\t%s\n", lg.c_str());
+    std::cout << "[Fatal]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(fatal) << lg;
 }

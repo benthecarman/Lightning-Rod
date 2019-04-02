@@ -70,7 +70,7 @@ public:
 
     bool hasShortcut()
     {
-        return this->shortcut.empty();
+        return !this->shortcut.empty();
     }
 };
 
