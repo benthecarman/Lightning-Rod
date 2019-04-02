@@ -60,16 +60,26 @@ void rawTxZMQServer()
 	txZMQServer = new ZMQServer("rawtx", config.getZMQTxHost(), config.getZMQTxPort());
 	txZMQServer->start();
 }
-
 int main(int argc, char *argv[])
 {
+	registerOptions();
+
 	if (argc == 2 && (strcmp("--help", argv[1]) == 0 || strcmp("-h", argv[1]) == 0))
 	{
-		// TODO Help interface
+		std::cout << "Usage: lightning rod" << std::endl;
+		std::cout << "Lightning Rod allows users to service as a full node for others that cannot run one" << std::endl << std::endl;
+
+		for (auto &opt : options)
+		{
+			std::string names = "--" + opt.getName();
+			if (opt.hasShortcut())
+				names += "|-" + opt.getShortcut();
+			std::cout << std::setw(25) << std::left << names;
+			std::cout << std::setw(40) << opt.getDescription();
+			std::cout << std::endl;
+		}
 		return 0;
 	}
-
-	registerOptions();
 
 	createConfig(argc, argv);
 	initLogger();
