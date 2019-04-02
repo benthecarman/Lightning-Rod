@@ -5,7 +5,7 @@
 
 static const bool DEFAULT_DAEMON = false;
 static const bool DEFAULT_DEBUG = false;
-static const bool DEFAULT_ZMQ_ENABLED = true;
+static const bool DEFAULT_ZMQ_DISABLED = false;
 static const int DEFAULT_PORT = 8331;
 static const int DEFAULT_ZMQ_BLOCK_PORT = 28330;
 static const int DEFAULT_ZMQ_TX_PORT = 28331;
@@ -33,7 +33,7 @@ class Config
 {
   bool daemon;
   bool debug;
-  bool zmqEnabled;
+  bool disablezmq;
   int port;
   int zmqBlockPort;
   int zmqTxPort;
@@ -66,13 +66,13 @@ public:
   {
     this->debug = db;
   }
-  bool getZMQEnabled()
+  bool getDisableZMQ()
   {
-    return this->zmqEnabled;
+    return this->disablezmq;
   }
-  void setZMQEnabled(const bool z)
+  void setDisableZMQ(const bool z)
   {
-    this->zmqEnabled = z;
+    this->disablezmq = z;
   }
   int getPort()
   {
