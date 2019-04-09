@@ -54,12 +54,12 @@ void logWarning(std::string lg)
 
 void logError(std::string lg)
 {
-    std::cout << "[Error]\t\t" << lg << std::endl;
+    std::cerr << "[Error]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(error) << lg;
 }
 
 void logFatal(std::string lg)
 {
-    std::cout << "[Fatal]\t\t" << lg << std::endl;
+    std::cerr << "[Fatal]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(fatal) << lg;
 }
