@@ -1,18 +1,20 @@
-CC=g++
-CFLAGS=-w -pthread -DBOOST_LOG_DYN_LINK
-ENDFLAGS=-lcurl -lboost_filesystem -lboost_system -lboost_log -lboost_thread -lzmq
+CXX=g++
+CXXFLAGS=-w -pthread -DBOOST_LOG_DYN_LINK
+LDFLAGS=-lcurl -lboost_filesystem -lboost_system -lboost_log -lboost_thread -lzmq
 
-default: rod.o
+default: lrod
 
-rod.o: src/rod.cpp src/config.cpp src/option.cpp src/rpcconnection.cpp src/server.cpp src/logger.cpp src/zmqserver.cpp depends/mongoose.cpp src/config.h src/option.h src/rpcconnection.h src/server.h src/logger.h src/zmqserver.h depends/mongoose.hpp
-	$(CC) $(CFLAGS) src/rod.cpp src/option.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp src/logger.cpp src/zmqserver.cpp depends/mongoose.cpp -o rod.o -I depends $(ENDFLAGS)
+lrod: src/rod.cpp src/config.cpp src/option.cpp src/rpcconnection.cpp src/server.cpp src/logger.cpp src/zmqserver.cpp depends/mongoose.cpp src/config.h src/option.h src/rpcconnection.h src/server.h src/logger.h src/zmqserver.h depends/mongoose.hpp
+	$(CXX) $(CXXFLAGS) src/rod.cpp src/option.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp src/logger.cpp src/zmqserver.cpp depends/mongoose.cpp -o lrod -I depends $(LDFLAGS)
 
-test: test.cpp
-	$(CC) $(CFLAGS) test.cpp src/rpcconnection.cpp -o test.o $(ENDFLAGS)
+#PREFIX is environment variable, but if it is not set, then set default value
+ifeq ($(PREFIX),)
+    PREFIX := /usr/local
+endif
 
-zmqtest: zmqtest.cpp
-	$(CC) $(CFLAGS) zmqtest.cpp -o test.o $(ENDFLAGS)
+install: lrod
+	install -d $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 lrod $(DESTDIR)$(PREFIX)/bin/
 
 clean:
-	$(RM) *.o
-	$(RM) src/*.o
+	$(RM) lrod
