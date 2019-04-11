@@ -40,7 +40,7 @@ void sigHandler(int s)
 		while (!serverRPC->isStopped() && !blockZMQServer->isStopped() && !txZMQServer->isStopped())
 			;
 		sleep(3);
-		exit(1);
+		exit(0);
 	default:
 		logInfo("Caught signal: " + s);
 	}

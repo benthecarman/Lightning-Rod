@@ -13143,7 +13143,7 @@ struct mg_connection *mg_sntp_get_time(struct mg_mgr *mgr,
 #endif
 
   return c;
-}
+};
 
 #endif /* MG_ENABLE_SNTP */
 #ifdef MG_MODULE_LINES
