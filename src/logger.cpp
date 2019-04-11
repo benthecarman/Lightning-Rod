@@ -28,38 +28,42 @@ void initLogger()
 
 void logTrace(std::string lg)
 {
-    if (config.isDebug())
+    if (config.isDebug() && !config.isDaemon())
         std::cout << "[Trace]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(trace) << lg;
 }
 
 void logDebug(std::string lg)
 {
-    if (config.isDebug())
+    if (config.isDebug() && !config.isDaemon())
         std::cout << "[Debug]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(debug) << lg;
 }
 
 void logInfo(std::string lg)
 {
-    std::cout << "[Info]\t\t" << lg << std::endl;
+    if (!config.isDaemon())
+        std::cout << "[Info]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(info) << lg;
 }
 
 void logWarning(std::string lg)
 {
-    std::cout << "[Warning]\t\t" << lg << std::endl;
+    if (!config.isDaemon())
+        std::cout << "[Warning]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(warning) << lg;
 }
 
 void logError(std::string lg)
 {
-    std::cerr << "[Error]\t\t" << lg << std::endl;
+    if (!config.isDaemon())
+        std::cerr << "[Error]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(error) << lg;
 }
 
 void logFatal(std::string lg)
 {
-    std::cerr << "[Fatal]\t\t" << lg << std::endl;
+    if (!config.isDaemon())
+        std::cerr << "[Fatal]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(fatal) << lg;
 }

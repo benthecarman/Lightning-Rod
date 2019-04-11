@@ -15,6 +15,8 @@
 #include "config.h"
 #include "option.h"
 
+#define RUNNING_DIR_DAEMON "/tmp"
+
 Server *serverRPC;
 ZMQServer *blockZMQServer;
 ZMQServer *txZMQServer;
@@ -35,12 +37,51 @@ void sigHandler(int s)
 		serverRPC->setRunning(false);
 		blockZMQServer->setRunning(false);
 		txZMQServer->setRunning(false);
-		while (!serverRPC->isStopped() && !blockZMQServer->isStopped() && !txZMQServer->isStopped());
+		while (!serverRPC->isStopped() && !blockZMQServer->isStopped() && !txZMQServer->isStopped())
+			;
 		sleep(3);
 		exit(1);
 	default:
-		std::cout << "Caught signal " << s << std::endl;
+		logInfo("Caught signal: " + s);
 	}
+}
+
+void signal_handler(int sig)
+{
+	switch (sig)
+	{
+	case SIGHUP:
+		logInfo("hangup signal caught");
+		break;
+	case SIGTERM:
+		logInfo("terminate signal caught");
+		exit(0);
+		break;
+	}
+}
+
+// This was taken from internet, can probably be improved
+void daemonize()
+{
+	int i;
+	if (getppid() == 1)
+		return;
+	i = fork();
+	if (i < 0)
+		exit(1);
+	if (i > 0)
+		exit(0);
+
+	setsid();
+	for (i = getdtablesize(); i >= 0; --i)
+		close(i);
+	chdir(RUNNING_DIR_DAEMON);
+	signal(SIGCHLD, SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+	signal(SIGTTOU, SIG_IGN);
+	signal(SIGTTIN, SIG_IGN);
+	signal(SIGHUP, signal_handler);
+	signal(SIGTERM, signal_handler);
 }
 
 void rpcServer()
@@ -67,7 +108,8 @@ int main(int argc, char *argv[])
 	if (argc == 2 && (strcmp("--help", argv[1]) == 0 || strcmp("-h", argv[1]) == 0))
 	{
 		std::cout << "Usage: lightning rod" << std::endl;
-		std::cout << "Lightning Rod allows users to service as a full node for others that cannot run one" << std::endl << std::endl;
+		std::cout << "Lightning Rod allows users to service as a full node for others that cannot run one" << std::endl
+				  << std::endl;
 
 		for (auto &opt : options)
 		{
@@ -83,6 +125,11 @@ int main(int argc, char *argv[])
 
 	createConfig(argc, argv);
 	initLogger();
+
+	if (config.isDaemon())
+	{
+		daemonize();
+	}
 
 	logDebug("Current Config:\n\n" + config.toString());
 

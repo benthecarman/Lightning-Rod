@@ -358,7 +358,12 @@ void createSampleConfigFile()
     samplecfg << "" << std::endl;
     samplecfg << "# Text following a '#' or a ';' will be considered comments and will be ignored" << std::endl;
     samplecfg << std::endl;
-    samplecfg << "# The port option specifies what port your Lightning Rod will be listening on for " << std::endl;
+    samplecfg << "# The daemon options specifies if Lightning Rod will run in the background" << std::endl;
+    samplecfg << "# while surpressing stdout/stderror, logging will still take place" << std::endl;
+    samplecfg << "# Note: Can be enabled using \"1\" or \"true\" and disabled using \"0\" or \"false\"" << std::endl;
+    samplecfg << "daemon = false" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The port option specifies what port your Lightning Rod will be listening on for" << std::endl;
     samplecfg << "# other users to connect with their lightning node" << std::endl;
     samplecfg << "port = 8331" << std::endl;
     samplecfg << std::endl;
