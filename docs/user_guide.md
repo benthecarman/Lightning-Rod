@@ -16,6 +16,8 @@
 
 A Lightning Rod is a program that you will run on top of your Bitcoin Core node. Using a Lightning Rod will not give you any additional benefits but it will enable many other users.  A Lightning Rod will allow a user to run an instance of lnd or c-lightning without needing to run a full node because they can connect to your Lighting Rod.
 
+For a Lightning Rod to opperate correctly you must have either a public IP address or have the Ports you are broadcasting to forwarded (defaults: 8331, 28330, 28831)
+
 ### Setup
 
 To correctly setup your Lightning Rod your Bitcoin Core node must be confiured correctly, a sample `bitcoin.conf` file can be found [here](sample_bitcoin.conf), using this should allow your Lightning Rod to run without any configuration, however, it is **HIGHLY** recommended to change the rpcuser and rpcpassword from the defaults, as it could leave your vulunarble to attacks.
