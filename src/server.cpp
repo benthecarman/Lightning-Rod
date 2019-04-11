@@ -12,6 +12,7 @@
 #include "logger.h"
 
 void ev_handler(struct mg_connection *nc, int ev, void *p, void *r);
+int authenticateData(const std::string data);
 
 std::vector<std::string> peers;
 
@@ -79,8 +80,8 @@ static std::string getPeerIP(const sock_t &sock)
 		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
 
-	std::string *ip = new std::string(ipstr, 0, strlen(ipstr));
-	return *ip;
+	std::string ip(ipstr, 0, strlen(ipstr));
+	return ip;
 }
 
 void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
@@ -109,6 +110,41 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 
 	std::string data(message->body.p, message->body.len);
 
+	logTrace(data);
+
+	int auth = authenticateData(data);
+
+	if (auth != 0)
+	{
+		int f = data.find("\"id\":\"") + 5;
+		std::string id = data.substr(f, data.find("\"", f) - f);
+		std::string sendString = "{\"result\":\"\",\"error\":\"invalid\",\"id\":" + id + "}";
+		mg_send_head(con, 200, sendString.length(), nullptr);
+		mg_printf(con, "%s", sendString.c_str());
+		mg_send_http_chunk(con, "", 0);
+
+		f = data.find("\"method\":\"") + 10;
+		std::string cmd = data.substr(f, data.find("\"", f) - f);
+
+		if (auth == -1)
+		{
+			logWarning("Peer (" + peerIP + ") attempted non-whitelisted command (" + cmd + ")");
+		}
+		else if (auth == 1)
+		{
+			logWarning("Peer (" + peerIP + ") attempted blacklisted command (" + cmd + ")");
+		}
+	}
+
+	std::string sendString = rpc->execute(data);
+
+	mg_send_head(con, 200, sendString.length(), nullptr);
+	mg_printf(con, "%s", sendString.c_str());
+	mg_send_http_chunk(con, "", 0);
+}
+
+int authenticateData(const std::string data)
+{
 	/*
 	 * Check whitelist then blacklist so commands are black list has priority
 	 * Blacklist has priority for better protection
@@ -123,44 +159,21 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 		}
 	}
 	bool blacklisted = false;
-	std::string blackListedcmd;
 	if (whitelisted)
 	{
 		for (auto const &cmd : config.getCommandBlackList())
 		{
 			if (data.find("\"method\":\"" + cmd + "\"") != std::string::npos)
 			{
-				blackListedcmd = cmd;
 				blacklisted = true;
 				break;
 			}
 		}
 	}
 
-	if (!whitelisted || blacklisted) // Command is not in whitelist or is blacklisted
-	{
-		std::string sendString = "{\"result\":\"\",\"error\":\"invalid\",\"id\":1}";
-		mg_send_head(con, 200, sendString.length(), nullptr);
-		mg_printf(con, "%s", sendString.c_str());
-		mg_send_http_chunk(con, "", 0);
-
-		if (!whitelisted)
-		{
-			int f = data.find("\"method\":\"") + 10;
-			std::string cmd = data.substr(f, data.find("\"", f) - f);
-			logWarning("Peer (" + peerIP + ") attempted non-whitelisted command (" + cmd + ")");
-		}
-		else
-		{
-			logWarning("Peer (" + peerIP + ") attempted blacklisted command (" + blackListedcmd + ")");
-		}
-
-		return;
-	}
-
-	std::string sendString = rpc->execute(data);
-
-	mg_send_head(con, 200, sendString.length(), nullptr);
-	mg_printf(con, "%s", sendString.c_str());
-	mg_send_http_chunk(con, "", 0);
+	if (whitelisted && !blacklisted) // Command is in whitelist and is not blacklisted
+		return 0;
+	if (!whitelisted && blacklisted) // Command is in blacklist and not whitelisted
+		return 1;
+	return -1; // Command is not in whitelist
 }

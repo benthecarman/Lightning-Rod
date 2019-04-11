@@ -88,6 +88,8 @@ std::string RPCConnection::execute(const std::string data)
     curl_easy_cleanup(curl);
     curl_global_cleanup();
 
+    free(headers);
+
     return s;
 }
 
