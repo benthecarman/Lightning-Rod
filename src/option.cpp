@@ -49,6 +49,4 @@ void registerOptions()
     options.push_back(Option(OPTION_WHITELISTCMD_NAME, "Whitelist a RPC command to allow peers to use"));
     options.push_back(Option(OPTION_BLACKLISTCMD_NAME, "Blacklist a RPC command to block peers from using"));
     options.push_back(Option(OPTION_BLACKLISTIP_NAME, "Blacklist an IP address from connecting to your node"));
-
-    logDebug("Options registered");
 }
