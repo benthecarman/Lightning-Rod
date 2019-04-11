@@ -6,6 +6,7 @@ Lightning Rod is meant to allow users to use the Lightning Network without needi
 
 ## Resources
 
+- [Building and Installing](docs/INSTALL.md)
 - [User Guide](docs/user_guide.md)
 - [Sample Config](docs/sample.conf)
 - [Sample LND Config](docs/sample_lnd.conf)
