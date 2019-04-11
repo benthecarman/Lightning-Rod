@@ -12,6 +12,7 @@ Config config;
 void parseArgs(const int, char **);
 void parseConfig();
 void processConfigLine(const std::string &, const bool);
+void createSampleConfigFile();
 
 Config::Config()
 {
@@ -108,14 +109,15 @@ void parseConfig()
         }
         configFile.close();
     }
-    else if (config.getConfigDir().find(DEFAULT_CONFIG_DIR) != std::string::npos)
+    else if (config.getConfigDir().find(DEFAULT_CONFIG_DIR) == std::string::npos)
     {
-        logDebug("No config file found, using defaults.");
+        logError("No config file found at specified location");
+        exit(1);
     }
-    else
+    else // No config file found and user did not give a location
     {
-        //TODO: Create sample config
-        //logDebug("Created sample config file");
+        createSampleConfigFile();
+        logInfo("Created sample config file");
     }
 }
 
@@ -340,4 +342,80 @@ void processConfigLine(const std::string &line, const bool isArg)
             break;
         }
     }
+}
+
+void createSampleConfigFile()
+{
+    boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_CONFIG_DIR + ".sample");
+
+    std::ofstream samplecfg(path.string());
+
+    // There might be a better way to do this
+    samplecfg << "# Sample Lightining Rod Configuration File" << std::endl;
+    samplecfg << "# Rename this file to conf.cfg to be used" << std::endl;
+    samplecfg << "# All values are set to their default options" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "" << std::endl;
+    samplecfg << "# Text following a '#' or a ';' will be considered comments and will be ignored" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The port option specifies what port your Lightning Rod will be listening on for " << std::endl;
+    samplecfg << "# other users to connect with their lightning node" << std::endl;
+    samplecfg << "port = 8331" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The host option specifies how to connect to your Bitcoin Core node's RPC server" << std::endl;
+    samplecfg << "host = http://127.0.0.1:8332/" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The disablezmq option specifies if you want your Lightning Rod to relay ZMQ requests" << std::endl;
+    samplecfg << "# Note: zmq must be enabled for lnd compatibility" << std::endl;
+    samplecfg << "# Note: Can be enabled using \"1\" or \"true\" and disabled using \"0\" or \"false\"" << std::endl;
+    samplecfg << "disablezmq = false" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The zmqblockhost option specifies how your Lighting Rod subscribes to your Bitcoin Core node's" << std::endl;
+    samplecfg << "# raw block ZMQ server" << std::endl;
+    samplecfg << "# Note: This should be the same as zmqpubrawblock in your bitcoin.conf" << std::endl;
+    samplecfg << "zmqblockhost = tcp://127.0.0.1:28332" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The zmqtxhost option specifies how your Lighting Rod subscribes to your Bitcoin Core node's" << std::endl;
+    samplecfg << "# raw tx ZMQ server" << std::endl;
+    samplecfg << "# Note: This should be the same as zmqpubrawtx in your bitcoin.conf" << std::endl;
+    samplecfg << "zmqtxhost = tcp://127.0.0.1:28333" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The zmqblockport option specifies what port you your Lighting Rod will be listening on" << std::endl;
+    samplecfg << "# for other users to connect with their lightning node" << std::endl;
+    samplecfg << "zmqblockport = 28330" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The zmqtxport option specifies what port you your Lighting Rod will be listening on" << std::endl;
+    samplecfg << "# for other users to connect with their lightning node" << std::endl;
+    samplecfg << "zmqtxport = 28331" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The rpcauth option specifies the rpc user and password for your Bitcoin Core node's RPC server" << std::endl;
+    samplecfg << "# The format is rpcuser:rpcpassword" << std::endl;
+    samplecfg << "# Note: It is highly recommended that you do not leave this as the default" << std::endl;
+    samplecfg << "rpcauth = user:pass #CHANGE ME" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The debug option specifies whether or not to run in debug mode." << std::endl;
+    samplecfg << "# With debug mode enabled you will recieve more information printed to the console." << std::endl;
+    samplecfg << "# Note: Can be enabled using \"1\" or \"true\" and disabled using \"0\" or \"false\"" << std::endl;
+    samplecfg << "debug = 0" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The logdir option specifies where your log files will be stored" << std::endl;
+    samplecfg << ";logdir = ~/.lightning-rod/logs/" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The blacklistcmd option will blacklist the command given and will not allow a peer" << std::endl;
+    samplecfg << "# to be passed to your Bitcoin Core node's RPC server" << std::endl;
+    samplecfg << "# Note: This option can be specified multiple times." << std::endl;
+    samplecfg << ";blacklistcmd=<cmd>" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The whitelistcmd option will whitelist the command given and will allow a peer" << std::endl;
+    samplecfg << "# to be passed to your Bitcoin Core node's RPC server" << std::endl;
+    samplecfg << "# Note: This option can be specified multiple times." << std::endl;
+    samplecfg << ";whitelistcmd=<cmd>" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The blacklistip option will blacklist an IP address from connecting to your Lightning Rod" << std::endl;
+    samplecfg << "# Note: IP addresses of peers can be found in your log files." << std::endl;
+    samplecfg << "# Note: This option can be specified multiple times." << std::endl;
+    samplecfg << ";blacklistip=<ip>" << std::endl;
+    samplecfg << std::endl;
+
+    samplecfg.close();
 }
