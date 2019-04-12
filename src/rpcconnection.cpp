@@ -10,6 +10,7 @@
 RPCConnection::RPCConnection(const std::string url, const std::string userpwd) : url(url),
                                                                                  userpwd(userpwd)
 {
+    curl_global_init(CURL_GLOBAL_ALL);
 }
 
 void RPCConnection::setURL(const std::string url)
@@ -47,16 +48,8 @@ size_t CurlWrite_CallbackFunc_StdString(void *contents, size_t size, size_t nmem
     return newLength;
 }
 
-std::string RPCConnection::execute(const std::string data)
+std::string RPCConnection::execute(std::string data)
 {
-    CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
-    if (res != 0)
-    {
-#ifdef LOGGER_ENABLED
-        logWarning("Failed curl init, request failed");
-#endif
-    }
-
     CURL *curl = curl_easy_init();
     struct curl_slist *headers = NULL;
 
@@ -86,7 +79,6 @@ std::string RPCConnection::execute(const std::string data)
     }
 
     curl_easy_cleanup(curl);
-    curl_global_cleanup();
 
     free(headers);
 
