@@ -27,6 +27,7 @@ static const std::vector<std::string> DEFAULT_CMD_WHITE_LIST = {
     "getnetworkinfo",
     "getblockchaininfo",
     "getblockheader",
+    "getrawtransaction",
     "gettxout"};
 
 class Config
