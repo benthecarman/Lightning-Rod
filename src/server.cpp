@@ -120,8 +120,8 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 		std::string id = data.substr(f, data.find("\"", f) - f);
 		std::string sendString = "{\"result\":\"\",\"error\":\"invalid\",\"id\":" + id + "}";
 		mg_send_head(con, 200, sendString.length(), nullptr);
-		mg_printf(con, "%s", sendString.c_str());
-		mg_send_http_chunk(con, "", 0);
+		mg_printf(con, "%s\n", sendString.c_str());
+		con->flags |= MG_F_SEND_AND_CLOSE;
 
 		f = data.find("\"method\":\"") + 10;
 		std::string cmd = data.substr(f, data.find("\"", f) - f);
@@ -139,8 +139,8 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 	std::string sendString = rpc->execute(data);
 
 	mg_send_head(con, 200, sendString.length(), nullptr);
-	mg_printf(con, "%s", sendString.c_str());
-	mg_send_http_chunk(con, "", 0);
+	mg_printf(con, "%s\n", sendString.c_str());
+	con->flags |= MG_F_SEND_AND_CLOSE;
 }
 
 int authenticateData(const std::string data)
@@ -159,7 +159,7 @@ int authenticateData(const std::string data)
 		}
 	}
 	bool blacklisted = false;
-	if (whitelisted)
+	if (whitelisted && !config.getCommandBlackList().empty())
 	{
 		for (auto const &cmd : config.getCommandBlackList())
 		{
