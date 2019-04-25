@@ -20,7 +20,7 @@ For a Lightning Rod to opperate correctly you must have either a public IP addre
 
 ### Setup
 
-To correctly setup your Lightning Rod your Bitcoin Core node must be confiured correctly, a sample `bitcoin.conf` file can be found [here](sample_bitcoin.conf), using this should allow your Lightning Rod to run without any configuration, however, it is **HIGHLY** recommended to change the rpcuser and rpcpassword from the defaults, as it could leave your vulunarble to attacks.
+To correctly setup your Lightning Rod your Bitcoin Core node must be confiured correctly, a sample `bitcoin.conf` file can be found [here](sample_bitcoin.conf), using this should allow your Lightning Rod to run without any configuration, however, it is **HIGHLY** recommended to change the rpcuser and rpcpassword from the defaults, as it could leave your node vulunarble to attacks.
 
 For further configuration options a sample config file can be found [here](sample.conf).
 
