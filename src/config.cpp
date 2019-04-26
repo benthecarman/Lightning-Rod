@@ -36,9 +36,9 @@ std::string Config::toString()
 {
     std::string str;
 
-    str += "Debug mode: " + std::to_string(this->debug) + "\n";
-    str += "daemon: " + std::to_string(this->daemon) + "\n";
-    str += "disablezmq: " + std::to_string(this->disablezmq) + "\n";
+    str += "Debug mode: " + std::string(this->debug ? "true" : "false") + "\n";
+    str += "daemon: " + std::string(this->daemon ? "true" : "false") + "\n";
+    str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
     str += "rpcauth: " + this->rpcAuth + "\n";
