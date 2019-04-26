@@ -137,7 +137,8 @@ static std::string getPeerIP(const int &sock)
 		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
 
-	std::string ip(ipstr, 0, strlen(ipstr));
+	std::string ip(ipstr);
+
 	return ip;
 }
 

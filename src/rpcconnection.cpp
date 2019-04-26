@@ -58,8 +58,6 @@ std::string RPCConnection::execute(std::string data)
     if (curl)
     {
         headers = curl_slist_append(headers, "Connection: close");
-        headers = curl_slist_append(headers, "Accept:");
-        headers = curl_slist_append(headers, "Content-Type:");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
         curl_easy_setopt(curl, CURLOPT_URL, this->url.c_str());
