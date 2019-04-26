@@ -4,14 +4,16 @@
 #include <vector>
 #include <algorithm>
 
-#include "mongoose.hpp"
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include "rpcconnection.h"
 #include "config.h"
 #include "server.h"
 #include "logger.h"
 
-void ev_handler(struct mg_connection *nc, int ev, void *p, void *r);
+static std::string getPeerIP(const int &sock);
+void handleRequest(int sock, RPCConnection *rpc, std::string peerIP);
 int authenticateData(const std::string data);
 
 std::vector<std::string> peers;
@@ -36,31 +38,86 @@ void Server::start()
 	{
 		logDebug("RPC Tests complete");
 	}
+	int sock, newSock;
+	socklen_t c;
 
-	struct mg_mgr mgr;
-	struct mg_connection *c;
+	struct sockaddr_in serv_addr, cli_addr;
+	int n, pid;
 
-	mg_mgr_init(&mgr, NULL);
-	c = mg_bind(&mgr, std::to_string(config.getPort()).c_str(), ev_handler, (void *)this->rpc);
-	mg_set_protocol_http_websocket(c);
+	//Create socket
+	sock = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (sock < 0)
+	{
+		perror("ERROR creating socket");
+		exit(1);
+	}
+
+	memset((char *)&serv_addr, '0', sizeof(serv_addr));
+
+	//Set necessary variables for connection
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = INADDR_ANY;
+	serv_addr.sin_port = htons(config.getPort());
+
+	int opt = 1;
+	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) < 0)
+	{
+		perror("ERROR setsockopt(SO_REUSEADDR) failed");
+		exit(1);
+	}
+
+	if (bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+	{
+		perror("ERROR binding socket");
+		exit(1);
+	}
+
+	listen(sock, 128);
+	c = sizeof(cli_addr);
 
 	this->running = true;
 	this->stopped = false;
 
 	logInfo("Lightning Rod ready to accept connections!");
+
 	while (this->running)
 	{
-		mg_mgr_poll(&mgr, 1000);
-	}
+		newSock = accept(sock, (struct sockaddr *)&cli_addr, &c);
 
-	mg_mgr_free(&mgr);
+		// Check connection IP address
+		std::string peerIP = getPeerIP(newSock);
+		for (auto const &ip : config.getIPBlackList())
+		{
+			if (ip.compare(peerIP) == 0)
+			{
+				logWarning("Attempted connection from blocked IP (" + peerIP + ")");
+				continue;
+			}
+		}
+		if (std::find(peers.begin(), peers.end(), peerIP) == peers.end())
+		{
+			peers.push_back(peerIP);
+			logInfo("New peer!");
+			logDebug("Peer IP: " + peerIP);
+		}
+
+		if (newSock < 0)
+		{
+			perror("ERROR accepting connection");
+			exit(1);
+		}
+
+		std::thread handle(handleRequest, newSock, this->rpc, peerIP);
+		handle.detach();
+	}
 
 	logInfo("RPC Server shutdown");
 
 	this->stopped = true;
 }
 
-static std::string getPeerIP(const sock_t &sock)
+static std::string getPeerIP(const int &sock)
 {
 	socklen_t len;
 	struct sockaddr_storage addr;
@@ -84,33 +141,30 @@ static std::string getPeerIP(const sock_t &sock)
 	return ip;
 }
 
-void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
+void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 {
-	if (ev != MG_EV_HTTP_REQUEST)
+	char buffer[1024] = {0};
+	int readval = read(sock, buffer, 1024);
+	if (readval < 0)
+	{
+		logError("Error reading message from " + peerIP);
+		std::string sendString = "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n";
+
+		send(sock, sendString.c_str(), sendString.length(), 0);
+
+		close(sock);
+
 		return;
-
-	std::string peerIP = getPeerIP(con->sock);
-	for (auto const &ip : config.getIPBlackList())
-	{
-		if (ip.compare(peerIP) == 0)
-		{
-			logWarning("Attempted connection from blocked IP (" + peerIP + ")");
-			return;
-		}
 	}
-	if (std::find(peers.begin(), peers.end(), peerIP) == peers.end())
+	std::string message(buffer);
+
+	int pos = message.find("{\"");
+	std::string data = "";
+
+	if (pos != std::string::npos)
 	{
-		peers.push_back(peerIP);
-		logInfo("New peer!");
-		logDebug("Peer IP: " + peerIP);
+		data = message.substr(pos);
 	}
-
-	RPCConnection *rpc = (RPCConnection *)r;
-	struct http_message *message = (struct http_message *)p;
-
-	std::string data(message->body.p, message->body.len);
-
-	logTrace(data);
 
 	int auth = authenticateData(data);
 
@@ -118,10 +172,6 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 	{
 		int f = data.find("\"id\":\"") + 5;
 		std::string id = data.substr(f, data.find("\"", f) - f);
-		std::string sendString = "{\"result\":\"\",\"error\":\"invalid\",\"id\":" + id + "}";
-		mg_send_head(con, 200, sendString.length(), nullptr);
-		mg_printf(con, "%s\n", sendString.c_str());
-		con->flags |= MG_F_SEND_AND_CLOSE;
 
 		f = data.find("\"method\":\"") + 10;
 		std::string cmd = data.substr(f, data.find("\"", f) - f);
@@ -134,13 +184,27 @@ void ev_handler(struct mg_connection *con, int ev, void *p, void *r)
 		{
 			logWarning("Peer (" + peerIP + ") attempted blacklisted command (" + cmd + ")");
 		}
+
+		std::string result = "{\"result\":\"\",\"error\":\"invalid\",\"id\":" + id + "}";
+		std::string header = "HTTP/1.1 403 Forbidden\r\nConnection: close\r\nContent-Length: " + std::to_string(result.length()) + "\r\n\r\n";
+
+		std::string sendString = header + result;
+
+		send(sock, sendString.c_str(), sendString.length(), 0);
+
+		close(sock);
+
+		return;
 	}
 
-	std::string sendString = rpc->execute(data);
+	std::string result = rpc->execute(data);
+	std::string header = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: " + std::to_string(result.length()) + "\r\n\r\n";
 
-	mg_send_head(con, 200, sendString.length(), nullptr);
-	mg_printf(con, "%s\n", sendString.c_str());
-	con->flags |= MG_F_SEND_AND_CLOSE;
+	std::string sendString = header + result;
+
+	send(sock, sendString.c_str(), sendString.length(), 0);
+
+	close(sock);
 }
 
 int authenticateData(const std::string data)
