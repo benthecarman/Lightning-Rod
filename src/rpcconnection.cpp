@@ -10,7 +10,7 @@
 RPCConnection::RPCConnection(const std::string url, const std::string userpwd) : url(url),
                                                                                  userpwd(userpwd)
 {
-    curl_global_init(CURL_GLOBAL_ALL);
+    curl_global_init(CURL_GLOBAL_DEFAULT);
 }
 
 void RPCConnection::setURL(const std::string url)
@@ -77,6 +77,7 @@ std::string RPCConnection::execute(std::string data)
     }
 
     curl_easy_cleanup(curl);
+    curl_global_cleanup();
 
     free(headers);
 
