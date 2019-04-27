@@ -11,6 +11,7 @@ static const std::string OPTION_DEBUG_NAME = "debug";
 static const std::string OPTION_DISABLEZMQ_NAME = "disablezmq";
 static const std::string OPTION_ZMQBLOCKPORT_NAME = "zmqBlockPort";
 static const std::string OPTION_ZMQTXPORT_NAME = "zmqTxPort";
+static const std::string OPTION_HTTPAUTH_NAME = "httpauth";
 static const std::string OPTION_PORT_NAME = "port";
 static const std::string OPTION_HOST_NAME = "host";
 static const std::string OPTION_RPCAUTH_NAME = "rpcauth";

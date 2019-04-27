@@ -6,6 +6,7 @@
 #include "config.h"
 #include "option.h"
 #include "logger.h"
+#include "base64.h"
 
 Config config;
 
@@ -23,6 +24,7 @@ Config::Config()
     this->zmqBlockPort = DEFAULT_ZMQ_BLOCK_PORT;
     this->zmqTxPort = DEFAULT_ZMQ_TX_PORT;
     this->host = DEFAULT_HOST;
+    this->httpAuth = DEFAULT_HTTP_AUTH;
     this->zmqBlockHost = DEFAULT_ZMQ_BLOCK_HOST;
     this->zmqTxHost = DEFAULT_ZMQ_TX_HOST;
     this->rpcAuth = DEFAULT_RPC_AUTH;
@@ -30,6 +32,12 @@ Config::Config()
     this->configdir = path.string();
     this->logdir = DEFAULT_LOG_DIR;
     this->cmdWhiteList = DEFAULT_CMD_WHITE_LIST;
+}
+
+void Config::setHttpAuth(std::string const &ha)
+{
+    this->httpAuth = ha;
+    this->httpAuthEncoded = base64_encode(ha);
 }
 
 std::string Config::toString()
@@ -41,6 +49,8 @@ std::string Config::toString()
     str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
+    if (this->hasHttpAuth())
+        str += "httpauth: " + this->httpAuth + "\n";
     str += "rpcauth: " + this->rpcAuth + "\n";
     str += "configdir: " + this->configdir + "\n";
 
@@ -295,6 +305,10 @@ void processConfigLine(const std::string &line, const bool isArg)
                 else if (opt.getName() == OPTION_HOST_NAME)
                 {
                     config.setHost(input);
+                }
+                else if (opt.getName() == OPTION_HTTPAUTH_NAME)
+                {
+                    config.setHttpAuth(input);
                 }
                 else if (opt.getName() == OPTION_RPCAUTH_NAME)
                 {

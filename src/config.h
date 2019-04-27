@@ -9,6 +9,7 @@ static const bool DEFAULT_ZMQ_DISABLED = false;
 static const int DEFAULT_PORT = 8331;
 static const int DEFAULT_ZMQ_BLOCK_PORT = 28330;
 static const int DEFAULT_ZMQ_TX_PORT = 28331;
+static const std::string DEFAULT_HTTP_AUTH = "";
 static const std::string DEFAULT_HOST = "http://127.0.0.1:8332/";
 static const std::string DEFAULT_ZMQ_BLOCK_HOST = "tcp://127.0.0.1:28332";
 static const std::string DEFAULT_ZMQ_TX_HOST = "tcp://127.0.0.1:28333";
@@ -38,6 +39,8 @@ class Config
   int port;
   int zmqBlockPort;
   int zmqTxPort;
+  std::string httpAuth;
+  std::string httpAuthEncoded;
   std::string host;
   std::string zmqBlockHost;
   std::string zmqTxHost;
@@ -98,6 +101,19 @@ public:
   void setZMQTxPort(const int p)
   {
     this->zmqTxPort = p;
+  }
+  bool hasHttpAuth()
+  {
+    return !this->httpAuth.empty();
+  }
+  void setHttpAuth(std::string const &);
+  std::string getHttpAuth()
+  {
+    return this->httpAuth;
+  }
+  std::string getHttpAuthEncoded()
+  {
+    return this->httpAuthEncoded;
   }
   std::string getHost()
   {

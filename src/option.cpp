@@ -42,6 +42,7 @@ void registerOptions()
     options.push_back(Option(OPTION_ZMQBLOCKPORT_NAME, "Port the Lightning Rod will be broadcasting blocks through ZeroMQ"));
     options.push_back(Option(OPTION_ZMQTXPORT_NAME, "Port the Lightning Rod will be broadcasting transactions through ZeroMQ"));
     options.push_back(Option(OPTION_PORT_NAME, "Port the Lightning Rod will be listening for connections"));
+    options.push_back(Option(OPTION_HTTPAUTH_NAME, "Authentication creditentials clients must use to make requests"));
     options.push_back(Option(OPTION_HOST_NAME, "Specify how to connect to the bitcoind RPC server"));
     options.push_back(Option(OPTION_RPCAUTH_NAME, "Authentication credentials for the bitcoind RPC server"));
     options.push_back(Option(OPTION_CONFIGDIR_NAME, "Specify where the configuration file is located"));
