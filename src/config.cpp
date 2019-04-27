@@ -6,6 +6,7 @@
 #include "config.h"
 #include "option.h"
 #include "logger.h"
+#include "base64.h"
 
 Config config;
 
@@ -23,6 +24,7 @@ Config::Config()
     this->zmqBlockPort = DEFAULT_ZMQ_BLOCK_PORT;
     this->zmqTxPort = DEFAULT_ZMQ_TX_PORT;
     this->host = DEFAULT_HOST;
+    this->httpAuth = DEFAULT_HTTP_AUTH;
     this->zmqBlockHost = DEFAULT_ZMQ_BLOCK_HOST;
     this->zmqTxHost = DEFAULT_ZMQ_TX_HOST;
     this->rpcAuth = DEFAULT_RPC_AUTH;
@@ -30,6 +32,12 @@ Config::Config()
     this->configdir = path.string();
     this->logdir = DEFAULT_LOG_DIR;
     this->cmdWhiteList = DEFAULT_CMD_WHITE_LIST;
+}
+
+void Config::setHttpAuth(std::string const &ha)
+{
+    this->httpAuth = ha;
+    this->httpAuthEncoded = base64_encode(ha);
 }
 
 std::string Config::toString()
@@ -41,6 +49,8 @@ std::string Config::toString()
     str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
+    if (this->hasHttpAuth())
+        str += "httpauth: " + this->httpAuth + "\n";
     str += "rpcauth: " + this->rpcAuth + "\n";
     str += "configdir: " + this->configdir + "\n";
 
@@ -296,6 +306,10 @@ void processConfigLine(const std::string &line, const bool isArg)
                 {
                     config.setHost(input);
                 }
+                else if (opt.getName() == OPTION_HTTPAUTH_NAME)
+                {
+                    config.setHttpAuth(input);
+                }
                 else if (opt.getName() == OPTION_RPCAUTH_NAME)
                 {
                     config.setRPCAuth(input);
@@ -366,6 +380,11 @@ void createSampleConfigFile()
     samplecfg << "# The port option specifies what port your Lightning Rod will be listening on for" << std::endl;
     samplecfg << "# other users to connect with their lightning node" << std::endl;
     samplecfg << "port = 8331" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The httpauth option specifies credentials that will be authenticated with every client request" << std::endl;
+    samplecfg << "# This option should be used when you want to only allow people with the credentials to connect" << std::endl;
+    samplecfg << "# Note: The format is specified as user:password" << std::endl;
+    samplecfg << ";httpauth = user:pass" << std::endl;
     samplecfg << std::endl;
     samplecfg << "# The host option specifies how to connect to your Bitcoin Core node's RPC server" << std::endl;
     samplecfg << "host = http://127.0.0.1:8332/" << std::endl;

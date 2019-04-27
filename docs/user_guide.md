@@ -4,6 +4,7 @@
   - [Lightning Rods](#lightning-rods)
     - [Setup](#setup)
     - [Optional Features](#optional-features)
+      - [HTTP Authentication Credentials](#http-authentication-credentials)
       - [Blocking IPs](#blocking-ips)
       - [Blocking default RPC commands](#blocking-default-rpc-commands)
       - [Allowing RPC commands](#allowing-rpc-commands)
@@ -25,6 +26,12 @@ To correctly setup your Lightning Rod your Bitcoin Core node must be confiured c
 For further configuration options a sample config file can be found [here](sample.conf).
 
 ### Optional Features
+
+#### HTTP Authentication Credentials
+
+HTTP authentication credentials can be set to only allow clients with the given credentials to connect.
+HTTP authentication credentials can be set by adding `httpauth=<credentials>` to your config file or
+using `--httpauth=<credentials>` as a command line argument.  The standard format is `user:pass`
 
 #### Blocking IPs
 
