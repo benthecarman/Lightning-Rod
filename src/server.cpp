@@ -174,7 +174,7 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 	}
 
 	int pos = message.find("{\"");
-	std::string data = "";
+	std::string data;
 
 	if (pos != std::string::npos)
 	{
