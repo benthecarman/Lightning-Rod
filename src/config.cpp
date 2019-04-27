@@ -381,6 +381,11 @@ void createSampleConfigFile()
     samplecfg << "# other users to connect with their lightning node" << std::endl;
     samplecfg << "port = 8331" << std::endl;
     samplecfg << std::endl;
+    samplecfg << "# The httpauth option specifies credentials that will be authenticated with every client request" << std::endl;
+    samplecfg << "# This option should be used when you want to only allow people with the credentials to connect" << std::endl;
+    samplecfg << "# Note: The format is specified as user:password" << std::endl;
+    samplecfg << ";httpauth = user:pass" << std::endl;
+    samplecfg << std::endl;
     samplecfg << "# The host option specifies how to connect to your Bitcoin Core node's RPC server" << std::endl;
     samplecfg << "host = http://127.0.0.1:8332/" << std::endl;
     samplecfg << std::endl;
