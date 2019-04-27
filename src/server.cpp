@@ -157,7 +157,21 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 
 		return;
 	}
+
 	std::string message(buffer);
+
+	// Invalid HTTP Auth Crendentials
+	if (config.hasHttpAuth() && message.find("Authorization: Basic " + config.getHttpAuthEncoded()) == std::string::npos)
+	{
+		logWarning("Peer (" + peerIP + ") attempted to connect with invalid credentials");
+		std::string sendString = "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n";
+
+		send(sock, sendString.c_str(), sendString.length(), 0);
+
+		close(sock);
+
+		return;
+	}
 
 	int pos = message.find("{\"");
 	std::string data = "";
@@ -167,9 +181,10 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 		data = message.substr(pos);
 	}
 
-	int auth = authenticateData(data);
+	int authData = authenticateData(data);
 
-	if (auth != 0)
+	// Disallowed commands attempted
+	if (authData != 0)
 	{
 		int f = data.find("\"id\":\"") + 5;
 		std::string id = data.substr(f, data.find("\"", f) - f);
@@ -177,11 +192,11 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 		f = data.find("\"method\":\"") + 10;
 		std::string cmd = data.substr(f, data.find("\"", f) - f);
 
-		if (auth == -1)
+		if (authData == -1)
 		{
 			logWarning("Peer (" + peerIP + ") attempted non-whitelisted command (" + cmd + ")");
 		}
-		else if (auth == 1)
+		else if (authData == 1)
 		{
 			logWarning("Peer (" + peerIP + ") attempted blacklisted command (" + cmd + ")");
 		}
