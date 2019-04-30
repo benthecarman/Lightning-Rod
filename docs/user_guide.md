@@ -46,16 +46,18 @@ IP addresses of peers can be found in your log files.
 By default a Lighting Rod will only allow the following RPC commands to be passed to your bitcoin node:
 
 - echo
-- getblockhash
-- getblock
 - estimatesmartfee
 - getbestblockhash
-- sendrawtransaction
-- getblockcount
-- getnetworkinfo
+- getblock
+- getblockhash
 - getblockchaininfo
+- getblockcount
+- getblockhash
 - getblockheader
+- getnetworkinfo
+- getrawtransaction
 - gettxout
+- sendrawtransaction
 
 Any of these commands can be blacklisted by adding `blacklistcmd=<cmd>`
 to your config file or using `--blacklistcmd=<cmd>` as a command line argument. This option can be specified multiple times.

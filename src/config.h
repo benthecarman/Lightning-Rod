@@ -31,17 +31,17 @@ static const std::string DEFAULT_LOG_DIR = "/.lightning-rod/logs/";
 
 static const std::vector<std::string> DEFAULT_CMD_WHITE_LIST = {
     "echo",
-    "getblockhash",
-    "getblock",
     "estimatesmartfee",
     "getbestblockhash",
-    "sendrawtransaction",
-    "getblockcount",
-    "getnetworkinfo",
+    "getblock",
     "getblockchaininfo",
+    "getblockcount",
+    "getblockhash",
     "getblockheader",
+    "getnetworkinfo",
     "getrawtransaction",
-    "gettxout"};
+    "gettxout",
+    "sendrawtransaction"};
 
 class Config
 {
