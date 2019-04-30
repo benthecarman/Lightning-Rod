@@ -18,7 +18,7 @@ void createSampleConfigFile();
 Config::Config()
 {
     this->daemon = DEFAULT_DAEMON;
-    this->debug = DEFAULT_DEBUG;
+    this->debugLevel = DEFAULT_DEBUG_LEVEL;
     this->disablezmq = DEFAULT_ZMQ_DISABLED;
     this->port = DEFAULT_PORT;
     this->zmqBlockPort = DEFAULT_ZMQ_BLOCK_PORT;
@@ -40,11 +40,34 @@ void Config::setHttpAuth(std::string const &ha)
     this->httpAuthEncoded = base64_encode(ha);
 }
 
+static DebugLevel stringToDebugLevel(std::string str)
+{
+  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+  if (str == "trace")
+    return DebugLevel::trace;
+  else if (str == "debug")
+    return DebugLevel::debug;
+  else if (str == "info")
+    return DebugLevel::info;
+  else if (str == "warning" || str == "warn")
+    return DebugLevel::warning;
+  else if (str == "error")
+    return DebugLevel::error;
+  else if (str == "fatal")
+    return DebugLevel::fatal;
+  else
+  {
+    logError("Unable to process debuglevel input: " + str);
+    exit(1);
+  }
+}
+
 std::string Config::toString()
 {
     std::string str;
 
-    str += "Debug mode: " + std::string(this->debug ? "true" : "false") + "\n";
+    str += "Debug level: " + debugLevelToString(this->debugLevel) + "\n";
     str += "daemon: " + std::string(this->daemon ? "true" : "false") + "\n";
     str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
     str += "host: " + this->host + "\n";
@@ -153,10 +176,6 @@ void processConfigLine(const std::string &line, const bool isArg)
                 {
                     config.setIsDaemon(true);
                 }
-                else if (opt.getName() == OPTION_DEBUG_NAME)
-                {
-                    config.setDebug(true);
-                }
                 else if (opt.getName() == OPTION_DISABLEZMQ_NAME)
                 {
                     config.setDisableZMQ(true);
@@ -193,26 +212,6 @@ void processConfigLine(const std::string &line, const bool isArg)
                     else
                     {
                         logError("Unable to proccess daemon config option: " + line);
-                        exit(1);
-                    }
-                }
-                else if (opt.getName() == OPTION_DEBUG_NAME)
-                {
-                    int num = -1;
-                    try
-                    {
-                        num = std::stoi(input);
-                    }
-                    catch (std::invalid_argument ignored)
-                    {
-                    }
-                    if (num == 1 || input == "true")
-                        config.setDebug(true);
-                    else if (num == 0 || input == "false")
-                        config.setDebug(false);
-                    else
-                    {
-                        logError("Unable to proccess debug config option: " + line);
                         exit(1);
                     }
                 }
@@ -302,6 +301,10 @@ void processConfigLine(const std::string &line, const bool isArg)
                         config.setPort(num);
                     }
                 }
+                else if (opt.getName() == OPTION_DEBUGLEVEL_NAME)
+                {
+                    config.setDebugLevel(stringToDebugLevel(input));
+                }
                 else if (opt.getName() == OPTION_HOST_NAME)
                 {
                     config.setHost(input);
@@ -346,7 +349,7 @@ void processConfigLine(const std::string &line, const bool isArg)
             }
             else if (opt.getShortcut() == OPTION_DEBUG_SHORTCUT)
             {
-                config.setDebug(true);
+                config.setDebugLevel(DebugLevel::debug);
             }
             else if (opt.getShortcut() == OPTION_DISABLEZMQ_SHORTCUT)
             {
@@ -417,10 +420,10 @@ void createSampleConfigFile()
     samplecfg << "# Note: It is highly recommended that you do not leave this as the default" << std::endl;
     samplecfg << "rpcauth = user:pass #CHANGE ME" << std::endl;
     samplecfg << std::endl;
-    samplecfg << "# The debug option specifies whether or not to run in debug mode." << std::endl;
-    samplecfg << "# With debug mode enabled you will recieve more information printed to the console." << std::endl;
-    samplecfg << "# Note: Can be enabled using \"1\" or \"true\" and disabled using \"0\" or \"false\"" << std::endl;
-    samplecfg << "debug = 0" << std::endl;
+    samplecfg << "# The debuglevel option specifies what will be logged to the terminal" << std::endl;
+    samplecfg << "# With lower levels selected you will recieve more information printed to the console" << std::endl;
+    samplecfg << "# Note: Options include {trace, debug, info, warning, error, fatal}" << std::endl;
+    samplecfg << "debuglevel = info" << std::endl;
     samplecfg << std::endl;
     samplecfg << "# The logdir option specifies where your log files will be stored" << std::endl;
     samplecfg << ";logdir = ~/.lightning-rod/logs/" << std::endl;

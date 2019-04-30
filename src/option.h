@@ -7,7 +7,7 @@ static const std::string OPTION_DEBUG_SHORTCUT = "db";
 static const std::string OPTION_DISABLEZMQ_SHORTCUT = "dzmq";
 
 static const std::string OPTION_DAEMON_NAME = "daemon";
-static const std::string OPTION_DEBUG_NAME = "debug";
+static const std::string OPTION_DEBUGLEVEL_NAME = "debuglevel";
 static const std::string OPTION_DISABLEZMQ_NAME = "disablezmq";
 static const std::string OPTION_ZMQBLOCKPORT_NAME = "zmqBlockPort";
 static const std::string OPTION_ZMQTXPORT_NAME = "zmqTxPort";
