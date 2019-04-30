@@ -3,8 +3,20 @@
 
 #include <algorithm>
 
+enum class DebugLevel
+{
+  trace,
+  debug,
+  info,
+  warning,
+  error,
+  fatal
+};
+
+const std::string debugLevelStrings[] = {"trace", "debug", "info", "warning", "error", "fatal"};
+
+static const DebugLevel DEFAULT_DEBUG_LEVEL = DebugLevel::info;
 static const bool DEFAULT_DAEMON = false;
-static const bool DEFAULT_DEBUG = false;
 static const bool DEFAULT_ZMQ_DISABLED = false;
 static const int DEFAULT_PORT = 8331;
 static const int DEFAULT_ZMQ_BLOCK_PORT = 28330;
@@ -33,8 +45,8 @@ static const std::vector<std::string> DEFAULT_CMD_WHITE_LIST = {
 
 class Config
 {
+  DebugLevel debugLevel;
   bool daemon;
-  bool debug;
   bool disablezmq;
   int port;
   int zmqBlockPort;
@@ -62,13 +74,13 @@ public:
   {
     this->daemon = d;
   }
-  bool isDebug()
+  DebugLevel getDebugLevel()
   {
-    return this->debug;
+    return this->debugLevel;
   }
-  void setDebug(const bool db)
+  void setDebugLevel(const DebugLevel dbl)
   {
-    this->debug = db;
+    this->debugLevel = dbl;
   }
   bool getDisableZMQ()
   {
@@ -206,5 +218,12 @@ public:
 extern Config config;
 
 void createConfig(const int argv, char *argc[]);
+
+static std::string debugLevelToString(DebugLevel dbl)
+{
+  return debugLevelStrings[static_cast<int>(dbl)];
+}
+
+static DebugLevel stringToDebugLevel(std::string str);
 
 #endif

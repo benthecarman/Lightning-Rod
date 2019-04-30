@@ -6,7 +6,6 @@
 #include <boost/filesystem.hpp>
 
 #include <iostream>
-#include <stdio.h>
 
 #include "config.h"
 
@@ -28,42 +27,42 @@ void initLogger()
 
 void logTrace(std::string lg)
 {
-    if (config.isDebug() && !config.isDaemon())
+    if (config.getDebugLevel() <= DebugLevel::trace && !config.isDaemon())
         std::cout << "[Trace]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(trace) << lg;
 }
 
 void logDebug(std::string lg)
 {
-    if (config.isDebug() && !config.isDaemon())
+    if (config.getDebugLevel() <= DebugLevel::debug && !config.isDaemon())
         std::cout << "[Debug]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(debug) << lg;
 }
 
 void logInfo(std::string lg)
 {
-    if (!config.isDaemon())
+    if (config.getDebugLevel() <= DebugLevel::info && !config.isDaemon())
         std::cout << "[Info]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(info) << lg;
 }
 
 void logWarning(std::string lg)
 {
-    if (!config.isDaemon())
+    if (config.getDebugLevel() <= DebugLevel::warning && !config.isDaemon())
         std::cout << "[Warning]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(warning) << lg;
 }
 
 void logError(std::string lg)
 {
-    if (!config.isDaemon())
+    if (config.getDebugLevel() <= DebugLevel::error && !config.isDaemon())
         std::cerr << "[Error]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(error) << lg;
 }
 
 void logFatal(std::string lg)
 {
-    if (!config.isDaemon())
+    if (config.getDebugLevel() <= DebugLevel::fatal && !config.isDaemon())
         std::cerr << "[Fatal]\t\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(fatal) << lg;
 }

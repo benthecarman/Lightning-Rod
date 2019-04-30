@@ -37,7 +37,7 @@ Option::Option(const std::string name, const std::string desc, const std::string
 void registerOptions()
 {
     options.push_back(Option(OPTION_DAEMON_NAME, "Run in the background, suppress stdout/stderr", OPTION_DAEMON_SHORTCUT, true));
-    options.push_back(Option(OPTION_DEBUG_NAME, "Enable debug mode", OPTION_DEBUG_SHORTCUT, true));
+    options.push_back(Option(OPTION_DEBUGLEVEL_NAME, "Logging level for all subsystems {trace, debug, info, warning, error, fatal}", OPTION_DEBUG_SHORTCUT));
     options.push_back(Option(OPTION_DISABLEZMQ_NAME, "Disable ZeroMQ Ports", OPTION_DISABLEZMQ_SHORTCUT, true));
     options.push_back(Option(OPTION_ZMQBLOCKPORT_NAME, "Port the Lightning Rod will be broadcasting blocks through ZeroMQ"));
     options.push_back(Option(OPTION_ZMQTXPORT_NAME, "Port the Lightning Rod will be broadcasting transactions through ZeroMQ"));
