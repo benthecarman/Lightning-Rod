@@ -2,6 +2,7 @@
 #include <cstring>
 #include <thread>
 #include <vector>
+#include <map>
 #include <algorithm>
 
 #include <arpa/inet.h>
@@ -15,8 +16,9 @@
 static std::string getPeerIP(const int &sock);
 void handleRequest(int sock, RPCConnection *rpc, std::string peerIP);
 int authenticateData(const std::string data);
+void blackListPeer(std::string ip);
 
-std::vector<std::string> peers;
+std::map<std::string, int> peers;
 
 Server::Server()
 {
@@ -104,17 +106,16 @@ void Server::start()
 
 		// Check connection's IP address
 		std::string peerIP = getPeerIP(newSock);
-		for (auto const &ip : config.getIPBlackList())
+		if (std::find(config.getIPBlackList().begin(), config.getIPBlackList().end(), peerIP) != config.getIPBlackList().end())
 		{
-			if (ip.compare(peerIP) == 0)
-			{
-				logWarning("Attempted connection from blocked IP (" + peerIP + ")");
-				continue;
-			}
+			logWarning("Attempted connection from blocked IP (" + peerIP + ")");
+			close(newSock);
+			continue;
 		}
-		if (std::find(peers.begin(), peers.end(), peerIP) == peers.end())
+
+		if (peers.find(peerIP) == peers.end())
 		{
-			peers.push_back(peerIP);
+			peers.insert(std::pair<std::string, int>(peerIP, 0));
 			logInfo("New peer!");
 			logDebug("Peer IP: " + peerIP);
 		}
@@ -187,6 +188,11 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 
 		close(sock);
 
+		if (config.getBanThreshold() >= 0 && ++peers[peerIP] > config.getBanThreshold())
+		{
+			blackListPeer(peerIP);
+		}
+
 		return;
 	}
 
@@ -227,6 +233,11 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 
 		close(sock);
 
+		if (config.getBanThreshold() >= 0 && ++peers[peerIP] > config.getBanThreshold())
+		{
+			blackListPeer(peerIP);
+		}
+
 		return;
 	}
 
@@ -238,6 +249,14 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 	send(sock, sendString.c_str(), sendString.length(), 0);
 
 	close(sock);
+}
+
+void blackListPeer(std::string ip)
+{
+	config.blacklistIP(ip);
+	logWarning("Peer (" + ip + ") has reached the ban threshold, peer is now blacklisted");
+
+	writeBlacklistedPeer(ip);
 }
 
 int authenticateData(const std::string data)

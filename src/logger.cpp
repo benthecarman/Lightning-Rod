@@ -11,7 +11,7 @@
 
 void initLogger()
 {
-    boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + config.getLogDir());
+    boost::filesystem::path path = boost::filesystem::path(config.getLogDir());
     boost::filesystem::create_directories(path);
 
     boost::log::add_file_log(
@@ -49,7 +49,7 @@ void logInfo(std::string lg)
 void logWarning(std::string lg)
 {
     if (config.getDebugLevel() <= DebugLevel::warning && !config.isDaemon())
-        std::cout << "[Warning]\t\t" << lg << std::endl;
+        std::cout << "[Warning]\t" << lg << std::endl;
     BOOST_LOG_TRIVIAL(warning) << lg;
 }
 

@@ -21,12 +21,14 @@ static const bool DEFAULT_ZMQ_DISABLED = false;
 static const int DEFAULT_PORT = 8331;
 static const int DEFAULT_ZMQ_BLOCK_PORT = 28330;
 static const int DEFAULT_ZMQ_TX_PORT = 28331;
-static const std::string DEFAULT_HTTP_AUTH = "";
+static const int DEFAULT_BAN_THRESHOLD = -1;
+static const std::string DEFAULT_HTTP_AUTH;
 static const std::string DEFAULT_HOST = "http://127.0.0.1:8332/";
 static const std::string DEFAULT_ZMQ_BLOCK_HOST = "tcp://127.0.0.1:28332";
 static const std::string DEFAULT_ZMQ_TX_HOST = "tcp://127.0.0.1:28333";
 static const std::string DEFAULT_RPC_AUTH = "user:pass";
 static const std::string DEFAULT_CONFIG_DIR = "/.lightning-rod/conf.cfg";
+static const std::string DEFAULT_BLACKLIST_IP_DIR = "/.lightning-rod/blacklisted-ips.txt";
 static const std::string DEFAULT_LOG_DIR = "/.lightning-rod/logs/";
 
 static const std::vector<std::string> DEFAULT_CMD_WHITE_LIST = {
@@ -51,6 +53,7 @@ class Config
   int port;
   int zmqBlockPort;
   int zmqTxPort;
+  int banThreshold;
   std::string httpAuth;
   std::string httpAuthEncoded;
   std::string host;
@@ -58,6 +61,7 @@ class Config
   std::string zmqTxHost;
   std::string rpcAuth;
   std::string configdir;
+  std::string blacklistipdir;
   std::string logdir;
   std::vector<std::string> cmdWhiteList;
   std::vector<std::string> cmdBlackList;
@@ -109,6 +113,14 @@ public:
   int getZMQTxPort()
   {
     return this->zmqTxPort;
+  }
+  void setBanThreshold(int bt)
+  {
+    this->banThreshold = bt;
+  }
+  int getBanThreshold()
+  {
+    return this->banThreshold;
   }
   void setZMQTxPort(const int p)
   {
@@ -166,6 +178,14 @@ public:
   void setConfigDir(std::string const &dir)
   {
     this->configdir = dir;
+  }
+  std::string getBlacklistIPDir()
+  {
+    return this->blacklistipdir;
+  }
+  void setBlacklistIPDir(std::string const &dir)
+  {
+    this->blacklistipdir = dir;
   }
   std::string getLogDir()
   {
@@ -225,5 +245,7 @@ static std::string debugLevelToString(DebugLevel dbl)
 }
 
 static DebugLevel stringToDebugLevel(std::string str);
+
+void writeBlacklistedPeer(std::string);
 
 #endif

@@ -46,7 +46,9 @@ void registerOptions()
     options.push_back(Option(OPTION_HOST_NAME, "Specify how to connect to the bitcoind RPC server"));
     options.push_back(Option(OPTION_RPCAUTH_NAME, "Authentication credentials for the bitcoind RPC server"));
     options.push_back(Option(OPTION_CONFIGDIR_NAME, "Specify where the configuration file is located"));
+    options.push_back(Option(OPTION_BLACKLISTIPDIR_NAME, "Specify where the automatically blacklisted IP addresses file is located"));
     options.push_back(Option(OPTION_LOGDIR_NAME, "Specify where log files will be stored"));
+    options.push_back(Option(OPTION_BANTHRESHOLD_NAME, "Number of disallowed requests before peer is automatically blacklisted (-1 to disable)"));
     options.push_back(Option(OPTION_WHITELISTCMD_NAME, "Whitelist a RPC command to allow peers to use"));
     options.push_back(Option(OPTION_BLACKLISTCMD_NAME, "Blacklist a RPC command to block peers from using"));
     options.push_back(Option(OPTION_BLACKLISTIP_NAME, "Blacklist an IP address from connecting to your node"));
