@@ -10,6 +10,8 @@ private:
   bool running = false;
   bool stopped = true;
 
+  bool testRPCConnection();
+
 public:
   Server();
   void start();

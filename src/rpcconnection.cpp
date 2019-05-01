@@ -84,7 +84,7 @@ std::string RPCConnection::execute(std::string data)
     return s;
 }
 
-std::string RPCConnection::execute()
+std::string RPCConnection::testAvailable()
 {
     std::string data = "{\"method\":\"echo\",\"params\":[],\"id\":\"test\"}";
     return execute(data);
