@@ -242,6 +242,18 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 	}
 
 	std::string result = rpc->execute(data);
+
+	int c = result.find("\"error\":{\"code\":");
+	if (c != std::string::npos)
+	{
+		c += 16;
+		int m = data.find("\"method\":\"") + 10;
+		std::string cmd = data.substr(m, data.find("\"", m) - m);
+		std::string code = result.substr(c, result.find(",\"", c) - c);
+
+		logWarning("Command (" + cmd + ") returned error code " + code + ", there may be a problem with your bitcoin node");
+	}
+
 	std::string header = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: " + std::to_string(result.length()) + "\r\n\r\n";
 
 	std::string sendString = header + result;
