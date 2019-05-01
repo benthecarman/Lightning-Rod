@@ -96,6 +96,33 @@ std::string Config::toString()
     return str;
 }
 
+int readBlacklistedPeers()
+{
+    boost::filesystem::path path = boost::filesystem::path(config.getBlacklistIPDir());
+
+    std::ifstream blackIPs(path.string());
+
+    int count = 0;
+    std::string tmp;
+    if (blackIPs.is_open())
+    {
+        while (getline(blackIPs, tmp))
+        {
+            tmp.erase(std::remove(tmp.begin(), tmp.end(), '\n'), tmp.end());
+            config.blacklistIP(tmp);
+            ++count;
+        }
+
+        blackIPs.close();
+    }
+    else
+    {
+        logWarning("Error opening blacklist IP");
+    }
+
+    return count;
+}
+
 void writeBlacklistedPeer(std::string ip)
 {
     boost::filesystem::path path = boost::filesystem::path(config.getBlacklistIPDir());
@@ -135,6 +162,10 @@ void createConfig(const int argv, char *argc[])
     {
         logFatal("Config option: port cannot be the same as zmqblockport");
     }
+
+    int blacklisted = readBlacklistedPeers();
+    if (blacklisted > 0)
+        logTrace(std::to_string(blacklisted) + " peers blacklisted from file");
 }
 
 void parseArgs(const int argv, char *argc[])
