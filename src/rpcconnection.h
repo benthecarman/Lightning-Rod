@@ -13,7 +13,7 @@ public:
   void setUserPwd(const std::string);
   std::string getUserPwd();
   std::string execute(const std::string);
-  std::string execute();
+  std::string testAvailable();
   void sendBack(const std::string, const std::string);
 };
 

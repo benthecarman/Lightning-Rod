@@ -23,26 +23,43 @@ Server::Server()
 	this->rpc = new RPCConnection(config.getHost(), config.getRPCAuth());
 }
 
+bool Server::testRPCConnection()
+{
+	std::string test = this->rpc->testAvailable();
+
+	if (test.empty())
+	{
+		logFatal("Failed initial RPC test, bitcoin-cli may not be running or your lightning rod is configured incorrectly.\n");
+		return false;
+	}
+	else if (test.find("{\"result\":null,\"error\":{\"code\":-28,\"message\":\"") != std::string::npos)
+	{
+		logDebug("Bitcoin RPC warming up, waiting...");
+		sleep(5);
+		return this->testRPCConnection();
+	}
+	else if (test.find("{\"result\":[],\"error\":null,\"id\":\"test\"}") != std::string::npos)
+	{
+		logDebug("RPC Tests complete");
+		return true;
+	}
+
+	logFatal("Unkown error when testing RPC connection");
+	return false;
+}
+
 void Server::start()
 {
 	logDebug("Testing connection with the bitcoind RPC");
-	std::string test = this->rpc->execute();
-
-	// TODO check for RPC warming up
-	if (test.find("{\"result\":[],\"error\":null,\"id\":\"test\"}") != 0)
+	if (!this->testRPCConnection())
 	{
-		logFatal("Failed initial RPC test, bitcoin-cli may not be running or your lightning rod is configured incorrectly.\n");
 		exit(1);
 	}
-	else
-	{
-		logDebug("RPC Tests complete");
-	}
+
 	int sock, newSock;
 	socklen_t c;
 
 	struct sockaddr_in serv_addr, cli_addr;
-	int n, pid;
 
 	//Create socket
 	sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -85,7 +102,7 @@ void Server::start()
 	{
 		newSock = accept(sock, (struct sockaddr *)&cli_addr, &c);
 
-		// Check connection IP address
+		// Check connection's IP address
 		std::string peerIP = getPeerIP(newSock);
 		for (auto const &ip : config.getIPBlackList())
 		{
