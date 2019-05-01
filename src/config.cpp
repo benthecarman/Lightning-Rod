@@ -23,6 +23,7 @@ Config::Config()
     this->port = DEFAULT_PORT;
     this->zmqBlockPort = DEFAULT_ZMQ_BLOCK_PORT;
     this->zmqTxPort = DEFAULT_ZMQ_TX_PORT;
+    this->banThreshold = DEFAULT_BAN_THRESHOLD;
     this->host = DEFAULT_HOST;
     this->httpAuth = DEFAULT_HTTP_AUTH;
     this->zmqBlockHost = DEFAULT_ZMQ_BLOCK_HOST;
@@ -30,7 +31,10 @@ Config::Config()
     this->rpcAuth = DEFAULT_RPC_AUTH;
     boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_CONFIG_DIR);
     this->configdir = path.string();
-    this->logdir = DEFAULT_LOG_DIR;
+    path = boost::filesystem::path(getenv("HOME") + DEFAULT_BLACKLIST_IP_DIR);
+    this->blacklistipdir = path.string();
+    path = boost::filesystem::path(getenv("HOME") + DEFAULT_LOG_DIR);
+    this->logdir = path.string();
     this->cmdWhiteList = DEFAULT_CMD_WHITE_LIST;
 }
 
@@ -42,25 +46,25 @@ void Config::setHttpAuth(std::string const &ha)
 
 static DebugLevel stringToDebugLevel(std::string str)
 {
-  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
-  if (str == "trace")
-    return DebugLevel::trace;
-  else if (str == "debug")
-    return DebugLevel::debug;
-  else if (str == "info")
-    return DebugLevel::info;
-  else if (str == "warning" || str == "warn")
-    return DebugLevel::warning;
-  else if (str == "error")
-    return DebugLevel::error;
-  else if (str == "fatal")
-    return DebugLevel::fatal;
-  else
-  {
-    logError("Unable to process debuglevel input: " + str);
-    exit(1);
-  }
+    if (str == "trace")
+        return DebugLevel::trace;
+    else if (str == "debug")
+        return DebugLevel::debug;
+    else if (str == "info")
+        return DebugLevel::info;
+    else if (str == "warning" || str == "warn")
+        return DebugLevel::warning;
+    else if (str == "error")
+        return DebugLevel::error;
+    else if (str == "fatal")
+        return DebugLevel::fatal;
+    else
+    {
+        logError("Unable to process debuglevel input: " + str);
+        exit(1);
+    }
 }
 
 std::string Config::toString()
@@ -72,10 +76,13 @@ std::string Config::toString()
     str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
     str += "host: " + this->host + "\n";
     str += "port: " + std::to_string(this->port) + "\n";
+    str += "banthreshold: " + std::to_string(this->banThreshold) + "\n";
     if (this->hasHttpAuth())
         str += "httpauth: " + this->httpAuth + "\n";
     str += "rpcauth: " + this->rpcAuth + "\n";
     str += "configdir: " + this->configdir + "\n";
+    str += "blacklistipdir: " + this->blacklistipdir + "\n";
+    str += "logdir: " + this->logdir + "\n";
 
     if (!this->disablezmq)
     {
@@ -87,6 +94,17 @@ std::string Config::toString()
     }
 
     return str;
+}
+
+void writeBlacklistedPeer(std::string ip)
+{
+    boost::filesystem::path path = boost::filesystem::path(config.getBlacklistIPDir());
+
+    std::fstream blackIPs(path.string(), std::fstream::out | std::fstream::app);
+
+    blackIPs << ip << std::endl;
+
+    blackIPs.close();
 }
 
 void createConfig(const int argv, char *argc[])
@@ -301,6 +319,21 @@ void processConfigLine(const std::string &line, const bool isArg)
                         config.setPort(num);
                     }
                 }
+                else if (opt.getName() == OPTION_BANTHRESHOLD_NAME)
+                {
+                    int num = -1;
+                    try
+                    {
+                        num = std::stoi(input);
+                    }
+                    catch (std::invalid_argument ignored)
+                    {
+                        logError("Invalid ban threshold (" + input + "), must be a number");
+                        exit(1);
+                    }
+
+                    config.setBanThreshold(num);
+                }
                 else if (opt.getName() == OPTION_DEBUGLEVEL_NAME)
                 {
                     config.setDebugLevel(stringToDebugLevel(input));
@@ -320,6 +353,10 @@ void processConfigLine(const std::string &line, const bool isArg)
                 else if (opt.getName() == OPTION_CONFIGDIR_NAME)
                 {
                     config.setConfigDir(input);
+                }
+                else if (opt.getName() == OPTION_BLACKLISTIPDIR_NAME)
+                {
+                    config.setBlacklistIPDir(input);
                 }
                 else if (opt.getName() == OPTION_LOGDIR_NAME)
                 {
@@ -420,6 +457,10 @@ void createSampleConfigFile()
     samplecfg << "# Note: It is highly recommended that you do not leave this as the default" << std::endl;
     samplecfg << "rpcauth = user:pass #CHANGE ME" << std::endl;
     samplecfg << std::endl;
+    samplecfg << "# The banthreshold option specifies the number of disallowed requests before peer is automatically blacklisted" << std::endl;
+    samplecfg << "# Note: Can be disabled by setting to -1" << std::endl;
+    samplecfg << "banthreshold = -1" << std::endl;
+    samplecfg << std::endl;
     samplecfg << "# The debuglevel option specifies what will be logged to the terminal" << std::endl;
     samplecfg << "# With lower levels selected you will recieve more information printed to the console" << std::endl;
     samplecfg << "# Note: Options include {trace, debug, info, warning, error, fatal}" << std::endl;
@@ -427,6 +468,9 @@ void createSampleConfigFile()
     samplecfg << std::endl;
     samplecfg << "# The logdir option specifies where your log files will be stored" << std::endl;
     samplecfg << ";logdir = ~/.lightning-rod/logs/" << std::endl;
+    samplecfg << std::endl;
+    samplecfg << "# The blacklistipdir option specifies where the blacklisted IP addresses file is located" << std::endl;
+    samplecfg << ";blacklistipdir = ~/.lightning-rod/blacklisted-ip.txt" << std::endl;
     samplecfg << std::endl;
     samplecfg << "# The blacklistcmd option will blacklist the command given and will not allow a peer" << std::endl;
     samplecfg << "# to be passed to your Bitcoin Core node's RPC server" << std::endl;

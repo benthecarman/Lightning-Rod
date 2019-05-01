@@ -2,6 +2,7 @@
 #define OPTION_H
 
 #include <string>
+
 static const std::string OPTION_DAEMON_SHORTCUT = "d";
 static const std::string OPTION_DEBUG_SHORTCUT = "db";
 static const std::string OPTION_DISABLEZMQ_SHORTCUT = "dzmq";
@@ -16,7 +17,9 @@ static const std::string OPTION_PORT_NAME = "port";
 static const std::string OPTION_HOST_NAME = "host";
 static const std::string OPTION_RPCAUTH_NAME = "rpcauth";
 static const std::string OPTION_CONFIGDIR_NAME = "configdir";
+static const std::string OPTION_BLACKLISTIPDIR_NAME = "blacklistipdir";
 static const std::string OPTION_LOGDIR_NAME = "logdir";
+static const std::string OPTION_BANTHRESHOLD_NAME = "banthreshold";
 static const std::string OPTION_WHITELISTCMD_NAME = "whitelistcmd";
 static const std::string OPTION_BLACKLISTCMD_NAME = "blacklistcmd";
 static const std::string OPTION_BLACKLISTIP_NAME = "blacklistip";
