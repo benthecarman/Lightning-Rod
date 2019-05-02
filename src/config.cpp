@@ -100,6 +100,9 @@ int readBlacklistedPeers()
 {
     boost::filesystem::path path = boost::filesystem::path(config.getBlacklistIPDir());
 
+    if (!exists(path))
+        return -1;
+
     std::ifstream blackIPs(path.string());
 
     int count = 0;
@@ -117,7 +120,7 @@ int readBlacklistedPeers()
     }
     else
     {
-        logWarning("Error opening blacklist IP");
+        logWarning("Error opening blacklisted IP file ");
     }
 
     return count;
