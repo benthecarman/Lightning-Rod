@@ -14,18 +14,31 @@
 #include "logger.h"
 
 static std::string getPeerIP(const int &sock);
-void handleRequest(int sock, RPCConnection *rpc, std::string peerIP);
+void handleRequest(int sock, RPCConnection *rpc, std::string peerIP, bool isSpark);
 int authenticateData(const std::string data);
 void blackListPeer(std::string ip);
 
-std::map<std::string, int> peers;
+struct PeerInfo
+{
+	int infractions = 0;
+	int version = -1;
+	long key = 0;
+};
 
-Server::Server()
+std::map<std::string, PeerInfo> peers;
+Handshake handshake;
+
+Server::Server(const bool sparkServer) : sparkServer(sparkServer)
 {
 	this->rpc = new RPCConnection(config.getHost(), config.getRPCAuth());
+
+	if (sparkServer)
+	{
+		//generate key pair
+	}
 }
 
-bool Server::testRPCConnection()
+bool Server::testRPCConnection(const bool printWait)
 {
 	std::string test = this->rpc->testAvailable();
 
@@ -36,9 +49,12 @@ bool Server::testRPCConnection()
 	}
 	else if (test.find("{\"result\":null,\"error\":{\"code\":-28,\"message\":\"") != std::string::npos)
 	{
-		logDebug("Bitcoin RPC warming up, waiting...");
+		if (printWait)
+		{
+			logDebug("Bitcoin RPC warming up, waiting...");
+		}
 		sleep(5);
-		return this->testRPCConnection();
+		return this->testRPCConnection(false);
 	}
 	else if (test.find("{\"result\":[],\"error\":null,\"id\":\"test\"}") != std::string::npos)
 	{
@@ -52,8 +68,11 @@ bool Server::testRPCConnection()
 
 void Server::start()
 {
-	logDebug("Testing connection with the bitcoind RPC");
-	if (!this->testRPCConnection())
+	std::string serverType = this->sparkServer ? "Spark" : "RPC";
+
+	logDebug(serverType + " server testing connection with the bitcoind RPC");
+
+	if (!this->testRPCConnection(true))
 	{
 		exit(1);
 	}
@@ -68,7 +87,7 @@ void Server::start()
 
 	if (sock < 0)
 	{
-		perror("ERROR creating socket");
+		logFatal("ERROR creating socket in " + serverType + " server");
 		exit(1);
 	}
 
@@ -77,28 +96,28 @@ void Server::start()
 	//Set necessary variables for connection
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(config.getPort());
+	serv_addr.sin_port = htons(this->sparkServer ? config.getSparkPort() : config.getPort());
 
 	int opt = 1;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) < 0)
 	{
-		perror("ERROR setsockopt(SO_REUSEADDR) failed");
+		logFatal("ERROR setsockopt(SO_REUSEADDR) failed in " + serverType + " server");
 		exit(1);
 	}
 
 	if (bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
-		perror("ERROR binding socket");
+		logFatal("ERROR binding socket in " + serverType + " server");
 		exit(1);
 	}
 
-	listen(sock, 128);
+	listen(sock, SOMAXCONN);
 	c = sizeof(cli_addr);
 
 	this->running = true;
 	this->stopped = false;
 
-	logInfo("Lightning Rod ready to accept connections!");
+	logInfo("Lightning Rod ready to accept connections! (" + serverType + ")");
 
 	while (this->running)
 	{
@@ -115,7 +134,8 @@ void Server::start()
 
 		if (peers.find(peerIP) == peers.end())
 		{
-			peers.insert(std::pair<std::string, int>(peerIP, 0));
+			PeerInfo pi;
+			peers.insert(std::pair<std::string, PeerInfo>(peerIP, pi));
 			logInfo("New peer!");
 			logDebug("Peer IP: " + peerIP);
 		}
@@ -126,11 +146,11 @@ void Server::start()
 			exit(1);
 		}
 
-		std::thread handle(handleRequest, newSock, this->rpc, peerIP);
+		std::thread handle(handleRequest, newSock, this->rpc, peerIP, this->sparkServer);
 		handle.detach();
 	}
 
-	logInfo("RPC Server shutdown");
+	logInfo(serverType + " server shutdown");
 
 	this->stopped = true;
 }
@@ -160,8 +180,32 @@ static std::string getPeerIP(const int &sock)
 	return ip;
 }
 
-void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
+void handleRequest(int sock, RPCConnection *rpc, std::string peerIP, bool isSpark)
 {
+	if (isSpark && peers.at(peerIP).version == -1) // New peer, need to handshake
+	{
+		//get key and version
+		Handshake client;
+		size_t bytes_received = recv(sock, &client, sizeof(Handshake), MSG_CMSG_CLOEXEC);
+		// TODO: handle 0 recv
+
+		client.version = ntohs(client.version);
+		client.pubkey = ntohl(client.pubkey);
+
+		peers.at(peerIP).version = client.version;
+
+		handshake.version = 0;
+		handshake.pubkey = 999; // Random number for testing
+
+		//send public key and version
+		sendto(sock, (const Handshake *)&handshake, sizeof(handshake), MSG_CONFIRM, NULL, 0);
+
+		//generate session key
+
+		close(sock);
+		return;
+	}
+
 	char buffer[1024] = {0};
 	int readval = read(sock, buffer, 1024);
 	if (readval < 0)
@@ -172,23 +216,26 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 		send(sock, sendString.c_str(), sendString.length(), 0);
 
 		close(sock);
-
 		return;
 	}
 
 	std::string message(buffer);
 
-	// Invalid HTTP Auth Crendentials
-	if (config.hasHttpAuth() && message.find("Authorization: Basic " + config.getHttpAuthEncoded()) == std::string::npos)
+	if (isSpark)
+	{
+		// Decrypt message
+	}
+
+	if (config.hasHttpAuth() && message.find("Authorization: Basic " + config.getHttpAuthEncoded()) == std::string::npos) // Invalid HTTP Credentials
 	{
 		logWarning("Peer (" + peerIP + ") attempted to connect with invalid credentials");
-		std::string sendString = "HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n";
+		std::string sendString = "HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n";
 
 		send(sock, sendString.c_str(), sendString.length(), 0);
 
 		close(sock);
 
-		if (config.getBanThreshold() >= 0 && ++peers[peerIP] > config.getBanThreshold())
+		if (config.getBanThreshold() >= 0 && ++peers.at(peerIP).infractions > config.getBanThreshold())
 		{
 			blackListPeer(peerIP);
 		}
@@ -197,12 +244,18 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 	}
 
 	int pos = message.find("{\"");
-	std::string data;
 
-	if (pos != std::string::npos)
+	if (pos == std::string::npos)
 	{
-		data = message.substr(pos);
+		logError("Error getting message data from " + peerIP);
+		std::string sendString = "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n";
+		send(sock, sendString.c_str(), sendString.length(), 0);
+
+		close(sock);
+		return;
 	}
+
+	std::string data = message.substr(pos);
 
 	int authData = authenticateData(data);
 
@@ -233,7 +286,7 @@ void handleRequest(int sock, RPCConnection *rpc, std::string peerIP)
 
 		close(sock);
 
-		if (config.getBanThreshold() >= 0 && ++peers[peerIP] > config.getBanThreshold())
+		if (config.getBanThreshold() >= 0 && ++peers.at(peerIP).infractions > config.getBanThreshold())
 		{
 			blackListPeer(peerIP);
 		}

@@ -10,10 +10,11 @@ static const std::string OPTION_DISABLEZMQ_SHORTCUT = "dzmq";
 static const std::string OPTION_DAEMON_NAME = "daemon";
 static const std::string OPTION_DEBUGLEVEL_NAME = "debuglevel";
 static const std::string OPTION_DISABLEZMQ_NAME = "disablezmq";
-static const std::string OPTION_ZMQBLOCKPORT_NAME = "zmqBlockPort";
-static const std::string OPTION_ZMQTXPORT_NAME = "zmqTxPort";
+static const std::string OPTION_ZMQBLOCKPORT_NAME = "zmqblockport";
+static const std::string OPTION_ZMQTXPORT_NAME = "zmqtxport";
 static const std::string OPTION_HTTPAUTH_NAME = "httpauth";
 static const std::string OPTION_PORT_NAME = "port";
+static const std::string OPTION_SPARKPORT_NAME = "sparkport";
 static const std::string OPTION_HOST_NAME = "host";
 static const std::string OPTION_RPCAUTH_NAME = "rpcauth";
 static const std::string OPTION_CONFIGDIR_NAME = "configdir";
@@ -81,5 +82,6 @@ public:
 extern std::vector<Option> options;
 
 void registerOptions();
+void registerSparkOptions();
 
 #endif

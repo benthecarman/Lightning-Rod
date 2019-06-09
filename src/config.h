@@ -3,6 +3,11 @@
 
 #include <algorithm>
 
+struct Handshake {
+  unsigned short version = 0;
+  unsigned int pubkey = 0;
+};
+
 enum class DebugLevel
 {
   trace,
@@ -19,6 +24,7 @@ static const DebugLevel DEFAULT_DEBUG_LEVEL = DebugLevel::info;
 static const bool DEFAULT_DAEMON = false;
 static const bool DEFAULT_ZMQ_DISABLED = false;
 static const int DEFAULT_PORT = 8331;
+static const int DEFAULT_SPARK_PORT = 8330;
 static const int DEFAULT_ZMQ_BLOCK_PORT = 28330;
 static const int DEFAULT_ZMQ_TX_PORT = 28331;
 static const int DEFAULT_BAN_THRESHOLD = -1;
@@ -27,7 +33,8 @@ static const std::string DEFAULT_HOST = "http://127.0.0.1:8332/";
 static const std::string DEFAULT_ZMQ_BLOCK_HOST = "tcp://127.0.0.1:28332";
 static const std::string DEFAULT_ZMQ_TX_HOST = "tcp://127.0.0.1:28333";
 static const std::string DEFAULT_RPC_AUTH = "user:pass";
-static const std::string DEFAULT_CONFIG_DIR = "/.lightning-rod/conf.cfg";
+static const std::string DEFAULT_CONFIG_DIR = "/.lightning-rod/rod.cfg";
+static const std::string DEFAULT_SPARK_CONFIG_DIR = "/.lightning-rod/spark.cfg";
 static const std::string DEFAULT_BLACKLIST_IP_DIR = "/.lightning-rod/blacklisted-ips.txt";
 static const std::string DEFAULT_LOG_DIR = "/.lightning-rod/logs/";
 
@@ -47,13 +54,18 @@ static const std::vector<std::string> DEFAULT_CMD_WHITE_LIST = {
 
 class Config
 {
+  bool spark = false;
   DebugLevel debugLevel;
   bool daemon;
   bool disablezmq;
+  int version;
   int port;
+  int sparkPort;
   int zmqBlockPort;
   int zmqTxPort;
   int banThreshold;
+  unsigned long privkey;
+  unsigned long pubkey;
   std::string httpAuth;
   std::string httpAuthEncoded;
   std::string host;
@@ -70,6 +82,14 @@ class Config
 public:
   Config();
 
+  bool isSpark()
+  {
+    return this->spark;
+  }
+  void setSpark(const bool s)
+  {
+    this->spark = s;
+  }
   bool isDaemon()
   {
     return this->daemon;
@@ -102,6 +122,14 @@ public:
   {
     this->port = p;
   }
+  int getSparkPort()
+  {
+    return this->sparkPort;
+  }
+  void setSparkPort(const int sp)
+  {
+    this->sparkPort = sp;
+  }
   int getZMQBlockPort()
   {
     return this->zmqBlockPort;
@@ -129,6 +157,14 @@ public:
   bool hasHttpAuth()
   {
     return !this->httpAuth.empty();
+  }
+  unsigned long getPublicKey()
+  {
+    return this->pubkey;
+  }
+  unsigned long getPrivateKey()
+  {
+    return this->privkey;
   }
   void setHttpAuth(std::string const &);
   std::string getHttpAuth()
@@ -230,6 +266,15 @@ public:
   bool isBlockZMQValid()
   {
     return (this->zmqBlockPort >= 1024 && this->zmqBlockPort < 65535) && !this->zmqBlockHost.empty();
+  }
+
+  bool rpcServerEnabled()
+  {
+    return this->port > 0;
+  }
+  bool sparkServerEnabled()
+  {
+    return this->sparkPort > 0;
   }
 
   std::string toString();

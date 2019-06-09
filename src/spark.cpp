@@ -11,16 +11,13 @@
 
 #include "server.h"
 #include "logger.h"
-#include "zmqserver.h"
+#include "client.h"
 #include "config.h"
 #include "option.h"
 
 #define RUNNING_DIR_DAEMON "/tmp"
 
-Server *serverRPC;
-Server *serverSpark;
-ZMQServer *blockZMQServer;
-ZMQServer *txZMQServer;
+Client *client;
 
 void sigHandler(int s)
 {
@@ -35,13 +32,6 @@ void sigHandler(int s)
 	case SIGSTOP:
 	case SIGQUIT:
 	case SIGTERM:
-		serverRPC->setRunning(false);
-		serverSpark->setRunning(false);
-		blockZMQServer->setRunning(false);
-		txZMQServer->setRunning(false);
-		while (!serverRPC->isStopped() && !serverSpark->isStopped() && !blockZMQServer->isStopped() && !txZMQServer->isStopped())
-			;
-		sleep(3);
 		exit(0);
 	default:
 		logInfo("Caught signal: " + s);
@@ -72,33 +62,15 @@ void daemonize()
 	signal(SIGTERM, sigHandler);
 }
 
-void rpcServer()
+void startClient()
 {
-	serverRPC = new Server(false);
-	serverRPC->start();
-}
-
-void sparkServer()
-{
-	serverSpark = new Server(true);
-	serverSpark->start();
-}
-
-void rawBlockZMQServer()
-{
-	blockZMQServer = new ZMQServer("rawblock", config.getZMQBlockHost(), config.getZMQBlockPort());
-	blockZMQServer->start();
-}
-
-void rawTxZMQServer()
-{
-	txZMQServer = new ZMQServer("rawtx", config.getZMQTxHost(), config.getZMQTxPort());
-	txZMQServer->start();
+	client = new Client();
+	client->start();
 }
 
 int main(int argc, char *argv[])
 {
-	registerOptions();
+	registerSparkOptions();
 
 	if (argc == 2 && (strcmp("--help", argv[1]) == 0 || strcmp("-h", argv[1]) == 0))
 	{
@@ -118,6 +90,8 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	config.setSpark(true);
+
 	createConfig(argc, argv);
 	initLogger();
 
@@ -136,45 +110,7 @@ int main(int argc, char *argv[])
 
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
-	if (config.rpcServerEnabled())
-	{
-		std::thread rpcThread(rpcServer);
-		rpcThread.detach();
-	}
-
-	if (config.sparkServerEnabled())
-	{
-		std::thread sparkThread(sparkServer);
-		sparkThread.detach();
-	}
-
-	if (!config.getDisableZMQ())
-	{
-		if (config.isTxZMQValid())
-		{
-			std::thread zmqTxThread(rawTxZMQServer);
-			zmqTxThread.detach();
-		}
-		if (config.isBlockZMQValid())
-		{
-			std::thread zmqBlockThread(rawBlockZMQServer);
-			zmqBlockThread.detach();
-		}
-		else if (!config.isTxZMQValid())
-		{
-			logError("ZMQ Enabled but ZMQ Ports and Hosts are not configured correctly");
-		}
-	}
-
-	if (!config.rpcServerEnabled() && !config.sparkServerEnabled())
-	{
-		if (config.getDisableZMQ())
-		{
-			logError("No broadcasting options enabled");
-			exit(1);
-		}
-		logWarning("ZMQ is only enabled");
-	}
+	startClient();
 
 	while (true)
 		;

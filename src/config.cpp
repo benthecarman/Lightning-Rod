@@ -21,6 +21,7 @@ Config::Config()
     this->debugLevel = DEFAULT_DEBUG_LEVEL;
     this->disablezmq = DEFAULT_ZMQ_DISABLED;
     this->port = DEFAULT_PORT;
+    this->sparkPort = DEFAULT_SPARK_PORT;
     this->zmqBlockPort = DEFAULT_ZMQ_BLOCK_PORT;
     this->zmqTxPort = DEFAULT_ZMQ_TX_PORT;
     this->banThreshold = DEFAULT_BAN_THRESHOLD;
@@ -71,26 +72,42 @@ std::string Config::toString()
 {
     std::string str;
 
-    str += "Debug level: " + debugLevelToString(this->debugLevel) + "\n";
-    str += "daemon: " + std::string(this->daemon ? "true" : "false") + "\n";
-    str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
-    str += "host: " + this->host + "\n";
-    str += "port: " + std::to_string(this->port) + "\n";
-    str += "banthreshold: " + std::to_string(this->banThreshold) + "\n";
-    if (this->hasHttpAuth())
-        str += "httpauth: " + this->httpAuth + "\n";
-    str += "rpcauth: " + this->rpcAuth + "\n";
-    str += "configdir: " + this->configdir + "\n";
-    str += "blacklistipdir: " + this->blacklistipdir + "\n";
-    str += "logdir: " + this->logdir + "\n";
-
-    if (!this->disablezmq)
+    if (this->spark)
     {
-        str += "\n";
-        str += "zmqBlockPort: " + std::to_string(this->zmqBlockPort) + "\n";
-        str += "zmqBlockHost: " + this->zmqBlockHost + "\n";
-        str += "zmqTxPort: " + std::to_string(this->zmqTxPort) + "\n";
-        str += "zmqTxHost: " + this->zmqTxHost + "\n";
+        str += "Debug level: " + debugLevelToString(this->debugLevel) + "\n";
+        str += "daemon: " + std::string(this->daemon ? "true" : "false") + "\n";
+        str += "host: " + this->host + "\n";
+        str += "port: " + std::to_string(this->port) + "\n";
+        str += "sparkport: " + std::to_string(this->sparkPort) + "\n";
+        if (this->hasHttpAuth())
+            str += "httpauth: " + this->httpAuth + "\n";
+        str += "configdir: " + this->configdir + "\n";
+        str += "logdir: " + this->logdir + "\n";
+    }
+    else
+    {
+        str += "Debug level: " + debugLevelToString(this->debugLevel) + "\n";
+        str += "daemon: " + std::string(this->daemon ? "true" : "false") + "\n";
+        str += "disablezmq: " + std::string(this->disablezmq ? "true" : "false") + "\n";
+        str += "host: " + this->host + "\n";
+        str += "port: " + std::to_string(this->port) + "\n";
+        str += "spark port: " + std::to_string(this->sparkPort) + "\n";
+        str += "banthreshold: " + std::to_string(this->banThreshold) + "\n";
+        if (this->hasHttpAuth())
+            str += "httpauth: " + this->httpAuth + "\n";
+        str += "rpcauth: " + this->rpcAuth + "\n";
+        str += "configdir: " + this->configdir + "\n";
+        str += "blacklistipdir: " + this->blacklistipdir + "\n";
+        str += "logdir: " + this->logdir + "\n";
+
+        if (!this->disablezmq)
+        {
+            str += "\n";
+            str += "zmqBlockPort: " + std::to_string(this->zmqBlockPort) + "\n";
+            str += "zmqBlockHost: " + this->zmqBlockHost + "\n";
+            str += "zmqTxPort: " + std::to_string(this->zmqTxPort) + "\n";
+            str += "zmqTxHost: " + this->zmqTxHost + "\n";
+        }
     }
 
     return str;
@@ -139,6 +156,12 @@ void writeBlacklistedPeer(std::string ip)
 
 void createConfig(const int argv, char *argc[])
 {
+    if (config.isSpark())
+    {
+        boost::filesystem::path path = boost::filesystem::path(getenv("HOME") + DEFAULT_SPARK_CONFIG_DIR);
+        config.setConfigDir(path.string());
+    }
+
     int i;
     for (i = 1; i < argv; ++i)
     {
@@ -343,15 +366,32 @@ void processConfigLine(const std::string &line, const bool isArg)
                         logError("Invalid port number (" + input + "), must be between 1024 and 65535");
                         exit(1);
                     }
-                    if (num <= 1024 || num > 65535)
+                    if (num != 0 && (num <= 1024 || num > 65535))
                     {
                         logError("Invalid port number (" + std::to_string(num) + "), must be between 1024 and 65535");
                         exit(1);
                     }
-                    else
+                    config.setPort(num);
+                }
+                else if (opt.getName() == OPTION_SPARKPORT_NAME)
+                {
+                    int num = -1;
+                    try
                     {
-                        config.setPort(num);
+                        num = std::stoi(input);
                     }
+                    catch (std::invalid_argument ignored)
+                    {
+                        logError("Invalid spark port number (" + input + "), must be between 1024 and 65535");
+                        exit(1);
+                    }
+                    if (num != 0 && (num <= 1024 || num > 65535))
+                    {
+                        logError("Invalid spark port number (" + input + "), must be between 1024 and 65535");
+                        exit(1);
+                    }
+
+                    config.setSparkPort(num);
                 }
                 else if (opt.getName() == OPTION_BANTHRESHOLD_NAME)
                 {
