@@ -17,4 +17,6 @@ Lightning Rod is meant to allow users to use the Lightning Network without needi
 
 If you'd like to donate to help the project: 325UiftBi8cFuDTmkLMjNsNcS8HkC6Gaa9
 
+(Donations will be shared will all contributors)
+
 Thank you :heart:
