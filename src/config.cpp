@@ -76,9 +76,9 @@ std::string Config::toString()
     {
         str += "Debug level: " + debugLevelToString(this->debugLevel) + "\n";
         str += "daemon: " + std::string(this->daemon ? "true" : "false") + "\n";
-        str += "host: " + this->host + "\n";
+        for (int i = 0; i < this->hosts.size(); ++i)
+            str += "host: " + this->hosts.at(i) + "\n";
         str += "port: " + std::to_string(this->port) + "\n";
-        str += "sparkport: " + std::to_string(this->sparkPort) + "\n";
         if (this->hasHttpAuth())
             str += "httpauth: " + this->httpAuth + "\n";
         str += "configdir: " + this->configdir + "\n";

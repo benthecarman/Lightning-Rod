@@ -17,7 +17,7 @@ Currently only building on Linux systems is supported, if you wish to compile on
 
 To get all the required dependencies, run the command below:
 
-    sudo apt-get install build-essential libcurl4-openssl-dev libboost-log-dev libboost-system-dev libboost-filesystem-dev libboost-thread-dev libzmq3-dev -y
+    sudo apt-get install build-essential libcurl4-openssl-dev libboost-log-dev libboost-system-dev libboost-filesystem-dev libboost-thread-dev libzmq3-dev libcrypto++-dev -y
 
 ### Build
 

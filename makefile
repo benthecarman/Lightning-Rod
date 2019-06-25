@@ -1,16 +1,16 @@
 CXX=@g++
 CXXFLAGS=-w -pthread -DBOOST_LOG_DYN_LINK
-LDFLAGS=-lcurl -lboost_filesystem -lboost_system -lboost_log -lboost_thread -lzmq
+LDFLAGS=-lcurl -lboost_filesystem -lboost_system -lboost_log -lboost_thread -lzmq -lcryptopp
 
 default: lrod spark
 
-lrod: src/rod.cpp src/config.cpp src/option.cpp src/rpcconnection.cpp src/server.cpp src/logger.cpp src/base64.cpp src/zmqserver.cpp src/config.h src/option.h src/rpcconnection.h src/server.h src/logger.h src/base64.h src/zmqserver.h
+lrod: src/rod.cpp src/config.cpp src/option.cpp src/rpcconnection.cpp src/server.cpp src/logger.cpp src/base64.cpp src/zmqserver.cpp src/aes.cpp src/config.h src/option.h src/rpcconnection.h src/server.h src/logger.h src/base64.h src/zmqserver.h src/aes.h
 	@echo CXX src/lrod.cpp
-	$(CXX) $(CXXFLAGS) src/rod.cpp src/option.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp src/logger.cpp src/base64.cpp src/zmqserver.cpp -o lrod $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) src/rod.cpp src/option.cpp src/config.cpp src/server.cpp src/rpcconnection.cpp src/logger.cpp src/base64.cpp src/zmqserver.cpp src/aes.cpp -o lrod $(LDFLAGS)
 
-spark: src/spark.cpp src/client.cpp src/config.cpp src/option.cpp src/rpcconnection.cpp src/logger.cpp src/base64.cpp src/config.h src/client.h src/option.h src/rpcconnection.h src/logger.h src/base64.h
+spark: src/spark.cpp src/client.cpp src/config.cpp src/option.cpp src/rpcconnection.cpp src/logger.cpp src/base64.cpp src/aes.cpp src/config.h src/client.h src/option.h src/rpcconnection.h src/logger.h src/base64.h src/aes.h
 	@echo CXX src/spark.cpp
-	$(CXX) $(CXXFLAGS) src/spark.cpp src/client.cpp src/option.cpp src/config.cpp src/rpcconnection.cpp src/logger.cpp src/base64.cpp -o spark $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) src/spark.cpp src/client.cpp src/option.cpp src/config.cpp src/rpcconnection.cpp src/logger.cpp src/base64.cpp src/aes.cpp -o spark $(LDFLAGS)
 
 #PREFIX is environment variable, but if it is not set, then set default value
 ifeq ($(PREFIX),)

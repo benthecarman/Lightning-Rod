@@ -10,8 +10,6 @@ private:
   bool running = false;
   bool stopped = true;
   bool sparkServer = true;
-  long privateKey;
-  long publicKey;
 
   bool testRPCConnection(const bool);
 
@@ -40,7 +38,7 @@ public:
   }
 };
 
-void handleConnection(const int sock, RPCConnection rpc, const bool sparkServer);
+void handleRequest(int sock, RPCConnection *rpc, std::string peerIP, bool isSpark);
 std::string parseHTTPRequest(const char *buffer);
 
 #endif

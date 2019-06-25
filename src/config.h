@@ -2,11 +2,7 @@
 #define CONFIG_H
 
 #include <algorithm>
-
-struct Handshake {
-  unsigned short version = 0;
-  unsigned int pubkey = 0;
-};
+#include <cryptopp/secblock.h>
 
 enum class DebugLevel
 {
@@ -64,8 +60,6 @@ class Config
   int zmqBlockPort;
   int zmqTxPort;
   int banThreshold;
-  unsigned long privkey;
-  unsigned long pubkey;
   std::string httpAuth;
   std::string httpAuthEncoded;
   std::string host;
@@ -78,6 +72,8 @@ class Config
   std::vector<std::string> cmdWhiteList;
   std::vector<std::string> cmdBlackList;
   std::vector<std::string> ipBlackList;
+  std::vector<std::string> hosts;
+  CryptoPP::SecByteBlock privkey, pubkey;
 
 public:
   Config();
@@ -158,13 +154,21 @@ public:
   {
     return !this->httpAuth.empty();
   }
-  unsigned long getPublicKey()
+  CryptoPP::SecByteBlock getPubKey()
   {
     return this->pubkey;
   }
-  unsigned long getPrivateKey()
+  void setPubkey(CryptoPP::SecByteBlock p)
+  {
+    this->pubkey = p;
+  }
+  CryptoPP::SecByteBlock getPrivKey()
   {
     return this->privkey;
+  }
+  void setPrivkey(CryptoPP::SecByteBlock p)
+  {
+    this->privkey = p;
   }
   void setHttpAuth(std::string const &);
   std::string getHttpAuth()
@@ -181,7 +185,10 @@ public:
   }
   void setHost(std::string const &h)
   {
-    this->host = h;
+    if (this->spark)
+      this->hosts.push_back(h);
+    else
+      this->host = h;
   }
   std::string getZMQBlockHost()
   {
@@ -257,6 +264,10 @@ public:
   {
     if (std::find(this->ipBlackList.begin(), this->ipBlackList.end(), ip) == this->ipBlackList.end())
       this->ipBlackList.push_back(ip);
+  }
+  std::vector<std::string> getHosts()
+  {
+    return this->hosts;
   }
 
   bool isTxZMQValid()

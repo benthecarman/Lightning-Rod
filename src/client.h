@@ -1,13 +1,14 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <cryptopp/osrng.h>
+
 class Client
 {
 private:
     bool running = false;
     bool stopped = true;
     int version = 0;
-    long key = 403;
 
 public:
     Client();

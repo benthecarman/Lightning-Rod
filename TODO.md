@@ -4,6 +4,4 @@
 
 * Server ping
 
-* Client app for encrypted connections
-
 * P2P

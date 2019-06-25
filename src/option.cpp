@@ -60,8 +60,7 @@ void registerSparkOptions()
     options.push_back(Option(OPTION_DAEMON_NAME, "Run in the background, suppress stdout/stderr", OPTION_DAEMON_SHORTCUT, true));
     options.push_back(Option(OPTION_DEBUGLEVEL_NAME, "Logging level for all subsystems {trace, debug, info, warning, error, fatal}", OPTION_DEBUG_SHORTCUT));
     options.push_back(Option(OPTION_PORT_NAME, "Port your lightning node is attempt to connect with (default: 8332)"));
-    options.push_back(Option(OPTION_HOST_NAME, "IP of specified Lightning Rod"));
-    options.push_back(Option(OPTION_SPARKPORT_NAME, "Port to connect to the specified Lightning Rod"));
+    options.push_back(Option(OPTION_HOST_NAME, "IP address and port of specified Lightning Rod (ex: 5.5.5.5:8330"));
     options.push_back(Option(OPTION_HTTPAUTH_NAME, "Authentication creditentials for the Lightning Rod (optional)"));
     options.push_back(Option(OPTION_LOGDIR_NAME, "Specify where log files will be stored"));
     options.push_back(Option(OPTION_CONFIGDIR_NAME, "Specify where the configuration file is located"));
